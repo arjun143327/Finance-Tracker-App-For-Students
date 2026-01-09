@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'add_expense_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -319,29 +320,41 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   }
 
   Widget _buildActionButton(IconData icon, String label, Color color) {
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: _glassDecoration(borderRadius: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [color.withOpacity(0.8), color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+    return GestureDetector(
+      onTap: () {
+        if (label == "Expense") {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+               builder: (context) => const AddExpenseScreen(),
+               fullscreenDialog: true,
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
-        ],
+          );
+        }
+      },
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: _glassDecoration(borderRadius: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [color.withOpacity(0.8), color],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
+          ],
+        ),
       ),
     );
   }
