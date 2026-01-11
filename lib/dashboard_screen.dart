@@ -3,6 +3,7 @@ import 'theme/neo_colors.dart';
 import 'add_expense_screen.dart';
 import 'goal_creation_screen.dart';
 import 'budget_setup_screen.dart';
+import 'analytics_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -681,11 +682,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(Icons.home, "Home", true, () {}),
-          _buildNavItem(Icons.pie_chart_outline, "Budget", false, () {
-            // Navigate to Budget Setup screen for now
+          _buildNavItem(Icons.bar_chart_rounded, "History", false, () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const BudgetSetupScreen()),
+              MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
             );
           }),
           _buildNavItem(Icons.flag_outlined, "Goals", false, () {
@@ -694,7 +694,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               MaterialPageRoute(builder: (context) => const GoalCreationScreen()),
             );
           }),
-          _buildNavItem(Icons.person_outline, "Profile", false, () {}),
+          _buildNavItem(Icons.pie_chart_outline, "Budget", false, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const BudgetSetupScreen()),
+            );
+          }),
         ],
       ),
     );
