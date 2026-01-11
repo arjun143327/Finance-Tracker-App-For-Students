@@ -3,6 +3,7 @@ import 'budget_setup_screen.dart';
 import 'theme/neo_colors.dart';
 import 'widgets/neo_button.dart';
 import 'widgets/neo_input.dart';
+import 'welcome_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -41,7 +42,12 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 20),
                   // App Bar / Back
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                      );
+                    },
                     child: const Icon(Icons.arrow_back, color: NeoColors.black, size: 32),
                   ),
 

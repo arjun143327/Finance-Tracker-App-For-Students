@@ -5,6 +5,8 @@ import 'goal_creation_screen.dart';
 import 'budget_setup_screen.dart';
 import 'analytics_screen.dart';
 import 'transaction_history_screen.dart';
+import 'profile_screen.dart';
+import 'sign_in_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -93,16 +95,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: NeoColors.blue,
-              shape: BoxShape.circle,
-              border: Border.all(color: NeoColors.black, width: 3),
-            ),
-            child: const Center(
-              child: Text("R", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: NeoColors.white)),
+          GestureDetector(
+            onTap: _showProfileMenu,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: NeoColors.blue,
+                shape: BoxShape.circle,
+                border: Border.all(color: NeoColors.black, width: 3),
+              ),
+              child: const Center(
+                child: Text("R", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: NeoColors.white)),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -758,6 +763,391 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showProfileMenu() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black26,
+      barrierDismissible: true,
+      builder: (context) => Stack(
+        children: [
+          Positioned(
+            top: 80,
+            left: 24,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 280,
+                decoration: BoxDecoration(
+                  color: NeoColors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: NeoColors.black, width: 4),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: NeoColors.black,
+                      offset: Offset(6, 6),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Profile Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: NeoColors.gray, width: 1)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: NeoColors.blue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: NeoColors.black, width: 3),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    "R",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 28,
+                                      color: NeoColors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      "Rahul Kumar",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        color: NeoColors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      "rahul@student.com",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: NeoColors.gray,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                );
+                              },
+                              child: const Text(
+                                "View Profile →",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: NeoColors.orange,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Menu Items
+                    _buildMenuItem(
+                      icon: Icons.settings,
+                      label: "Settings",
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Navigate to settings
+                      },
+                      showArrow: true,
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.bar_chart,
+                      label: "Export Data",
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Export data logic
+                      },
+                      showArrow: true,
+                    ),
+                    _buildMenuItemWithToggle(
+                      icon: Icons.notifications,
+                      label: "Notifications",
+                      value: true,
+                      onChanged: (value) {
+                        // Toggle notifications
+                      },
+                    ),
+                    _buildMenuItemWithToggle(
+                      icon: Icons.dark_mode,
+                      label: "Dark Mode",
+                      value: false,
+                      onChanged: null, // Disabled - coming soon
+                      isDisabled: true,
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.logout,
+                      label: "Logout",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showLogoutConfirmation();
+                      },
+                      showArrow: false,
+                      isLogout: true,
+                      hasBorder: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool showArrow = false,
+    bool isLogout = false,
+    bool hasBorder = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: NeoColors.white, width: 3),
+            bottom: hasBorder 
+                ? const BorderSide(color: NeoColors.gray, width: 1) 
+                : BorderSide.none,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: isLogout ? NeoColors.red : NeoColors.black,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isLogout ? FontWeight.w800 : FontWeight.w600,
+                  color: isLogout ? NeoColors.red : NeoColors.black,
+                ),
+              ),
+            ),
+            if (showArrow)
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: NeoColors.gray,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItemWithToggle({
+    required IconData icon,
+    required String label,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+    bool isDisabled = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(
+          left: BorderSide(color: NeoColors.white, width: 3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 24,
+            color: isDisabled ? NeoColors.gray : NeoColors.black,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isDisabled ? NeoColors.gray : NeoColors.black,
+              ),
+            ),
+          ),
+          Transform.scale(
+            scale: 0.8,
+            child: Switch(
+              value: value,
+              onChanged: isDisabled ? null : onChanged,
+              activeColor: NeoColors.orange,
+              activeTrackColor: NeoColors.orange.withOpacity(0.5),
+              inactiveThumbColor: NeoColors.gray,
+              inactiveTrackColor: NeoColors.gray.withOpacity(0.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: NeoColors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: NeoColors.black, width: 4),
+            boxShadow: const [
+              BoxShadow(
+                color: NeoColors.black,
+                offset: Offset(8, 8),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Logout?',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: NeoColors.black,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Are you sure you want to logout?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: NeoColors.gray,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: NeoColors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: NeoColors.black, width: 3),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: NeoColors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Clear session and navigate to sign in
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => const SignInScreen(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                            transitionDuration: const Duration(milliseconds: 300),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: NeoColors.red,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: NeoColors.black, width: 3),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: NeoColors.black,
+                              offset: Offset(4, 4),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: NeoColors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
