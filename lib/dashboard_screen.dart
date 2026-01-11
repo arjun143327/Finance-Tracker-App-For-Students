@@ -4,6 +4,7 @@ import 'add_expense_screen.dart';
 import 'goal_creation_screen.dart';
 import 'budget_setup_screen.dart';
 import 'analytics_screen.dart';
+import 'transaction_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -604,13 +605,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Recent Activity",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: NeoColors.darkGray,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Recent Activity",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: NeoColors.darkGray,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
+                  );
+                },
+                child: const Text(
+                  "See All →",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: NeoColors.orange,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           _buildTransactionItem("🍔", "Canteen Lunch", "-₹80", "12:30 PM"),
