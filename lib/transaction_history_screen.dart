@@ -1,44 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'providers/finance_providers.dart';
 import 'theme/neo_colors.dart';
 
-class TransactionHistoryScreen extends StatefulWidget {
+class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  State<TransactionHistoryScreen> createState() => _TransactionHistoryScreenState();
+  ConsumerState<TransactionHistoryScreen> createState() => _TransactionHistoryScreenState();
 }
 
-class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
+class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScreen> {
   String selectedFilter = 'All';
   String currentMonth = 'January 2026';
-
-  // Mock transaction data grouped by date
-  final Map<String, List<Map<String, dynamic>>> _groupedTransactions = {
-    'Today': [
-      {'icon': '🍔', 'title': 'Canteen Lunch', 'category': 'Food', 'time': '12:30 PM', 'amount': -80},
-      {'icon': '🚗', 'title': 'Auto', 'category': 'Transport', 'time': '9:00 AM', 'amount': -40},
-    ],
-    'Yesterday': [
-      {'icon': '☕', 'title': 'Coffee - Split ÷3', 'category': 'Food', 'time': '4:15 PM', 'amount': -120},
-      {'icon': '🎬', 'title': 'Movie', 'category': 'Entertainment', 'time': '7:30 PM', 'amount': -250},
-    ],
-    'Jan 10': [
-      {'icon': '📚', 'title': 'Textbook', 'category': 'Education', 'time': '3:00 PM', 'amount': -450},
-      {'icon': '🛍️', 'title': 'Grocery', 'category': 'Shopping', 'time': '11:00 AM', 'amount': -320},
-    ],
-    'Jan 9': [
-      {'icon': '📺', 'title': 'Netflix', 'category': 'Bills', 'time': '10:00 AM', 'amount': -199},
-    ],
-    'Jan 8': [
-      {'icon': '💼', 'title': 'Part-time Job', 'category': 'Income', 'time': '6:00 PM', 'amount': 2000},
-    ],
-    'Jan 5': [
-      {'icon': '🚌', 'title': 'Bus Pass', 'category': 'Transport', 'time': '8:00 AM', 'amount': -300},
-    ],
-    'Jan 1': [
-      {'icon': '💰', 'title': 'Monthly Allowance', 'category': 'Income', 'time': '12:00 PM', 'amount': 6000},
-    ],
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +35,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     const SizedBox(height: 24),
                     _buildTransactionList(),
                     const SizedBox(height: 24),
-                    _buildLoadMoreButton(),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -71,6 +44,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       ),
     );
   }
+
+  // ... _buildTopBar ... (unchanged)
 
   Widget _buildTopBar() {
     return Container(
@@ -115,6 +90,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 
   Widget _buildMonthSummaryCard() {
+    final transactions = ref.watch(transactionsProvider);
+    double totalSpent = 0;
+    
+    for (var tx in transactions) {
+      if (tx.type == 'expense') {
+        if (selectedFilter == 'All' || tx.category == selectedFilter) {
+           totalSpent += tx.amount;
+        }
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
@@ -164,7 +150,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Total Spent: ${_getFilteredTotal()}',
+                  'Total Spent: ₹${totalSpent.toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
@@ -192,7 +178,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 
   Widget _buildFilterChips() {
-    final List<String> filters = ['All', 'Food', 'Transport', 'Income', 'Entertainment'];
+    final List<String> filters = ['All', 'Food', 'Transport', 'Income', 'Entertainment', 'Shopping', 'Education', 'Healthcare'];
     
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -239,34 +225,38 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 
   Widget _buildTransactionList() {
-    // Filter transactions based on selected filter
-    final filteredGroups = <String, List<Map<String, dynamic>>>{};
+    final transactions = ref.watch(transactionsProvider);
     
-    _groupedTransactions.forEach((date, transactions) {
-      final filtered = transactions.where((transaction) {
-        if (selectedFilter == 'All') return true;
-        return transaction['category'] == selectedFilter;
-      }).toList();
-      
-      if (filtered.isNotEmpty) {
-        filteredGroups[date] = filtered;
-      }
-    });
+    // Group transactions by Date
+    final Map<String, List<dynamic>> grouped = {};
     
-    if (filteredGroups.isEmpty) {
+    for (var tx in transactions) {
+       // Filter first
+       if (selectedFilter != 'All' && tx.category != selectedFilter) continue;
+       if (selectedFilter == 'Income' && tx.type != 'income') continue; // Special case if Income acts as category
+
+       final dateKey = DateFormat('MMM d').format(tx.date);
+       if (grouped[dateKey] == null) grouped[dateKey] = [];
+       grouped[dateKey]!.add(tx);
+    }
+    
+    if (grouped.isEmpty) {
       return _buildEmptyState();
     }
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: filteredGroups.entries.map((entry) {
+      children: grouped.entries.map((entry) {
         return _buildDateGroup(entry.key, entry.value);
       }).toList(),
     );
   }
 
-  Widget _buildDateGroup(String date, List<Map<String, dynamic>> transactions) {
-    final total = transactions.fold<int>(0, (sum, t) => sum + (t['amount'] as int).abs());
+  Widget _buildDateGroup(String date, List<dynamic> transactions) {
+    double total = 0;
+    for(var t in transactions) {
+       if (t.type == 'expense') total += t.amount;
+    }
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +275,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 ),
               ),
               Text(
-                '₹$total',
+                'Expense: ₹${total.toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -307,11 +297,24 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  Widget _buildTransactionCard(Map<String, dynamic> transaction) {
-    final isPositive = transaction['amount'] >= 0;
+  Widget _buildTransactionCard(dynamic transaction) {
+    final isPositive = transaction.type == 'income';
+    final amount = transaction.amount;
+    final title = transaction.title;
+    final category = transaction.category;
+    final time = DateFormat('h:mm a').format(transaction.date);
     
+    // Icon selection logic
+    String icon = "💰";
+    if (category.startsWith("Food")) icon = "🍔";
+    else if (category.startsWith("Transport")) icon = "🚌";
+    else if (category.startsWith("Entertainment")) icon = "🎬";
+    else if (category.startsWith("Shopping")) icon = "🛍️";
+    else if (category.startsWith("Education")) icon = "📚";
+    else if (category.startsWith("Healthcare")) icon = "💊";
+
     return Dismissible(
-      key: Key(transaction['title']),
+      key: Key(transaction.id), // Use ID
       background: Container(
         margin: const EdgeInsets.only(right: 4),
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -337,15 +340,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           // Edit action
-          _showTransactionDetail(transaction);
+          // _showTransactionDetail(transaction);
           return false;
         } else {
           // Delete action
-          return await _showDeleteConfirmation();
+          final confirm = await _showDeleteConfirmation();
+          if (confirm == true) {
+             ref.read(transactionsProvider.notifier).deleteTransaction(transaction.id);
+             return true;
+          }
+          return false;
         }
       },
       child: GestureDetector(
-        onTap: () => _showTransactionDetail(transaction),
+        onTap: () {
+          // _showTransactionDetail(transaction);
+        },
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -362,14 +372,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ),
           child: Row(
             children: [
-              Text(transaction['icon'], style: const TextStyle(fontSize: 24)),
+              Text(icon, style: const TextStyle(fontSize: 24)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      transaction['title'],
+                      title,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -380,7 +390,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     Row(
                       children: [
                         Text(
-                          transaction['category'],
+                          category,
                           style: const TextStyle(
                             color: NeoColors.gray,
                             fontSize: 12,
@@ -389,7 +399,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         ),
                         const Text(' • ', style: TextStyle(color: NeoColors.gray)),
                         Text(
-                          transaction['time'],
+                          time,
                           style: const TextStyle(
                             color: NeoColors.gray,
                             fontSize: 12,
@@ -402,7 +412,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 ),
               ),
               Text(
-                '${isPositive ? '+' : '-'}₹${transaction['amount'].abs()}',
+                '${isPositive ? '+' : '-'}₹${amount.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
@@ -731,20 +741,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  // Helper method to get filtered total
-  String _getFilteredTotal() {
-    int total = 0;
-    _groupedTransactions.forEach((date, transactions) {
-      for (var transaction in transactions) {
-        if (selectedFilter == 'All' || transaction['category'] == selectedFilter) {
-          if (transaction['amount'] < 0) {
-            total += (transaction['amount'] as int).abs();
-          }
-        }
-      }
-    });
-    return '₹$total';
-  }
+
 
   // Empty state widget
   Widget _buildEmptyState() {

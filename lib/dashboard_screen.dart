@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'providers/finance_providers.dart';
 import 'theme/neo_colors.dart';
 import 'add_expense_screen.dart';
 import 'goal_creation_screen.dart';
@@ -8,14 +11,14 @@ import 'transaction_history_screen.dart';
 import 'profile_screen.dart';
 import 'sign_in_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,6 +186,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBudgetCard() {
+    final summary = ref.watch(summaryProvider);
+    final percent = summary.budgetTotal > 0 ? (summary.budgetSpent / summary.budgetTotal) : 0.0;
+    final displayPercent = percent > 1.0 ? 1.0 : percent;
+
     return Transform.rotate(
       angle: -2.5 * 3.14159 / 180, // Card tilted
       child: Container(
@@ -223,18 +230,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  "₹3,500",
-                  style: TextStyle(
+                Text(
+                  "₹${summary.budgetSpent.toStringAsFixed(0)}",
+                  style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
                     color: NeoColors.darkGray,
                     height: 1,
                   ),
                 ),
-                const Text(
-                  "of ₹6,000 budget",
-                  style: TextStyle(
+                Text(
+                  "of ₹${summary.budgetTotal.toStringAsFixed(0)} budget",
+                  style: const TextStyle(
                     fontSize: 14,
                     color: NeoColors.gray,
                     fontWeight: FontWeight.w600,
@@ -254,15 +261,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
-                          widthFactor: 0.58,
-                          child: Container(color: NeoColors.orange),
+                          widthFactor: displayPercent,
+                          child: Container(color: percent > 1 ? NeoColors.red : NeoColors.orange),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      "58%",
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: NeoColors.darkGray),
+                    Text(
+                      "${(percent * 100).toStringAsFixed(0)}%",
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: NeoColors.darkGray),
                     ),
                   ],
                 ),
@@ -271,8 +278,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildInfoPill("📅", "17 days left", NeoColors.darkGray),
-                    _buildInfoPill("💡", "Spend ₹205/day", NeoColors.green),
+                    _buildInfoPill("📅", "${summary.budgetRemaining < 0 ? 'Over!' : 'Left'}", NeoColors.darkGray),
+                     // _buildInfoPill can be improved with calculated days left
+                    _buildInfoPill("💡", "Avg ₹${summary.dailyAverage.toStringAsFixed(0)}/day", NeoColors.green),
                   ],
                 ),
               ],
@@ -396,19 +404,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              _buildCategoryCard("🍕", "Food & Dining", NeoColors.orange, 0.87, "₹1,400", "₹1,600", "13% left"),
-              const SizedBox(height: 12),
-              _buildCategoryCard("🚌", "Transport", NeoColors.red, 0.97, "₹580", "₹600", "3% left"),
-              const SizedBox(height: 12),
-              _buildCategoryCard("🎬", "Entertainment", NeoColors.red, 0.94, "₹750", "₹800", "6% left"),
-              const SizedBox(height: 12),
-              _buildCategoryCard("🛍️", "Shopping", NeoColors.green, 0.30, "₹300", "₹1,000", "70% left"),
-            ],
-          ),
+          child: _buildCategorySpendingSection(ref),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategorySpendingSection(WidgetRef ref) {
+    final categorySpending = ref.watch(categorySpendingProvider);
+    
+    if (categorySpending.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: NeoColors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: NeoColors.black, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: NeoColors.black.withOpacity(0.1),
+              offset: const Offset(4, 4),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Text(
+            'No budget set. Go to Budget Setup!',
+            style: TextStyle(
+              color: NeoColors.gray,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return Column(
+      children: categorySpending.map((cat) {
+        // Calculate percentage of CATEGORY BUDGET
+        final categoryBudget = cat.categoryBudget;
+        final percent = categoryBudget > 0 ? cat.amount / categoryBudget : 0.0;
+        final percentLeft = categoryBudget > 0 ? ((categoryBudget - cat.amount) / categoryBudget * 100) : 0.0;
+        
+        // Color based on percentage of category budget used
+        Color color;
+        if (percent >= 0.9) {
+          color = NeoColors.red; // Over 90% of category budget used
+        } else if (percent >= 0.7) {
+          color = NeoColors.orange; // 70-90% used
+        } else {
+          color = NeoColors.green; // Under 70%
+        }
+        
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildCategoryCard(
+            cat.emoji,
+            cat.category,
+            color,
+            percent.clamp(0.0, 1.0),
+            '₹${cat.amount.toStringAsFixed(0)}',
+            '₹${categoryBudget.toStringAsFixed(0)}',
+            '${percentLeft.toStringAsFixed(0)}% left',
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -453,27 +514,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              used,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 17,
-                                color: NeoColors.darkGray,
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                used,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                  color: NeoColors.darkGray,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            Text(
-                              "of $total",
-                              style: const TextStyle(
-                                color: NeoColors.gray,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
+                              Text(
+                                "of $total",
+                                style: const TextStyle(
+                                  color: NeoColors.gray,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -605,6 +670,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildRecentTransactions() {
+    final transactions = ref.watch(transactionsProvider);
+    final recentTransactions = transactions.take(5).toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -640,11 +708,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTransactionItem("🍔", "Canteen Lunch", "-₹80", "12:30 PM"),
-          const SizedBox(height: 12),
-          _buildTransactionItem("📚", "Notebooks", "-₹150", "10:00 AM"),
-          const SizedBox(height: 12),
-          _buildTransactionItem("💰", "Pocket Money", "+₹2000", "Yesterday"),
+          if (recentTransactions.isEmpty)
+             const Text("No transactions yet.", style: TextStyle(color: NeoColors.gray)),
+          
+          ...recentTransactions.map((tx) {
+             return Column(
+               children: [
+                 _buildTransactionItem(
+                    tx.category.startsWith("Food") ? "🍔" : 
+                    tx.category.startsWith("Transport") ? "🚌" : "💰", 
+                    tx.title, 
+                    "${tx.type == 'income' ? '+' : '-'}₹${tx.amount.toStringAsFixed(0)}", 
+                    DateFormat('MMM d, h:mm a').format(tx.date)
+                 ),
+                 const SizedBox(height: 12),
+               ]
+             );
+          }).toList(),
         ],
       ),
     );

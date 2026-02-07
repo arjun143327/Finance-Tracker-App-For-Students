@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/finance_providers.dart';
 import 'theme/neo_colors.dart';
 import 'widgets/neo_button.dart';
 
-class AddExpenseScreen extends StatefulWidget {
+class AddExpenseScreen extends ConsumerStatefulWidget {
   const AddExpenseScreen({super.key});
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   String _selectedCategory = "Food & Dining";
   DateTime _selectedDate = DateTime.now();
+  String _transactionType = 'expense'; // Add this field
+
 
   final List<Map<String, dynamic>> _categories = [
     {"icon": "🍕", "name": "Food & Dining"},
     {"icon": "🚌", "name": "Transport"},
     {"icon": "🎬", "name": "Entertainment"},
     {"icon": "🛍️", "name": "Shopping"},
-    {"icon": "📚", "name": "Education"},
-    {"icon": "💊", "name": "Healthcare"},
+    {"icon": "📚", "name": "Books & Study"},
+    {"icon": "�", "name": "Savings"},
+    {"icon": "�", "name": "Salary"}, // Income category
   ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +63,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   const Expanded(
                     child: Center(
                       child: Text(
-                        "Add Expense",
+                        "Add Transaction",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -77,6 +83,58 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 12),
+                    
+                    // Type Switcher (Income/Expense)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _transactionType = 'expense'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: _transactionType == 'expense' ? NeoColors.red : NeoColors.white,
+                                border: Border.all(color: NeoColors.black, width: 2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "Expense",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _transactionType == 'expense' ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _transactionType = 'income'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: _transactionType == 'income' ? NeoColors.green : NeoColors.white,
+                                border: Border.all(color: NeoColors.black, width: 2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "Income",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _transactionType == 'income' ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     
                     // Amount Input
@@ -237,11 +295,25 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
                     // Save Button
                     NeoButton(
-                      text: "Save Expense",
+                      text: "Save Transaction",
                       onPressed: () {
-                        Navigator.pop(context);
+                         final double? amount = double.tryParse(_amountController.text);
+                         if (amount == null || amount <= 0) {
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter a valid amount")));
+                           return;
+                         }
+                         
+                         ref.read(transactionsProvider.notifier).addTransaction(
+                           title: _descController.text.isEmpty ? _selectedCategory : _descController.text, 
+                           amount: amount, 
+                           category: _selectedCategory, 
+                           type: _transactionType, 
+                           date: DateTime.now(),
+                         );
+                         
+                         Navigator.pop(context);
                       },
-                      color: NeoColors.green,
+                      color: _transactionType == 'income' ? NeoColors.green : NeoColors.red,
                       textColor: NeoColors.white,
                     ),
                     

@@ -4,8 +4,24 @@ import 'welcome_screen.dart';
 import 'budget_setup_screen.dart';
 import 'goal_creation_screen.dart';
 
-void main() {
-  runApp(const SavetonApp());
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'data/local_db/storage_service.dart';
+import 'providers/finance_providers.dart';
+
+// Global storage service instance
+late StorageService storageService;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  
+  // Initialize storage service
+  storageService = StorageService();
+  await storageService.init();
+  
+  runApp(const ProviderScope(child: SavetonApp()));
 }
 
 class SavetonApp extends StatelessWidget {
