@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -225,4 +226,136 @@ final categorySpendingProvider = Provider<List<CategorySpending>>((ref) {
   result.sort((a, b) => b.amount.compareTo(a.amount));
   
   return result;
+});
+// --- Analytics ---
+
+class AnalyticsSummary {
+  final double totalSpent;
+  final double totalIncome;
+  final double budgetLeft;
+  final double dailyAverage;
+  final double budgetPerDay;
+  final List<CategorySpending> categoryBreakdown;
+  final List<String> smartInsights;
+  final Map<int, double> dailySpending; // day-of-month → amount
+  final Map<String, double> dayOfWeekSpending; // 'Mon'→amount etc.
+  final double prevMonthSpent;
+  final String prevMonthName;
+  final String currentMonthName;
+  final double budgetTotal;
+
+  AnalyticsSummary({
+    required this.totalSpent,
+    required this.totalIncome,
+    required this.budgetLeft,
+    required this.dailyAverage,
+    required this.budgetPerDay,
+    required this.categoryBreakdown,
+    required this.smartInsights,
+    required this.dailySpending,
+    required this.dayOfWeekSpending,
+    required this.prevMonthSpent,
+    required this.prevMonthName,
+    required this.currentMonthName,
+    required this.budgetTotal,
+  });
+}
+
+final analyticsProvider = Provider<AnalyticsSummary>((ref) {
+  final transactions = ref.watch(transactionsProvider);
+  final budget = ref.watch(budgetProvider);
+  final categoryBreakdown = ref.watch(categorySpendingProvider);
+
+  final now = DateTime.now();
+  final currentMonthId = DateFormat('yyyy_MM').format(now);
+  final prevMonth = DateTime(now.year, now.month - 1);
+  final prevMonthId = DateFormat('yyyy_MM').format(prevMonth);
+
+  double totalSpent = 0;
+  double totalIncome = 0;
+  double prevMonthSpent = 0;
+  final Map<int, double> dailySpending = {};
+  final Map<String, double> dayOfWeekSpending = {
+    'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0,
+  };
+  final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  for (var tx in transactions) {
+    final txMonth = DateFormat('yyyy_MM').format(tx.date);
+    if (txMonth == currentMonthId) {
+      if (tx.type == 'expense') {
+        totalSpent += tx.amount;
+        dailySpending[tx.date.day] = (dailySpending[tx.date.day] ?? 0) + tx.amount;
+        // weekday: Monday=1, Sunday=7
+        final dayName = dayNames[tx.date.weekday - 1];
+        dayOfWeekSpending[dayName] = (dayOfWeekSpending[dayName] ?? 0) + tx.amount;
+      } else {
+        totalIncome += tx.amount;
+      }
+    } else if (txMonth == prevMonthId && tx.type == 'expense') {
+      prevMonthSpent += tx.amount;
+    }
+  }
+
+  final budgetTotal = budget?.totalBudget ?? 0;
+  final budgetLeft = budgetTotal - totalSpent;
+  final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
+  final budgetPerDay = budgetTotal > 0 ? budgetTotal / daysInMonth : 0.0;
+  final dailyAverage = now.day > 0 ? totalSpent / now.day : 0.0;
+
+  // Generate smart insights
+  final insights = <String>[];
+  if (totalSpent == 0) {
+    insights.add('💡 No expenses recorded yet this month.');
+  } else {
+    // Category over-budget warning
+    for (var cat in categoryBreakdown) {
+      if (cat.categoryBudget > 0) {
+        final pct = cat.amount / cat.categoryBudget;
+        if (pct >= 0.9) {
+          insights.add('⚠️ ${cat.category} at ${(pct * 100).toStringAsFixed(0)}% of budget!');
+          break;
+        }
+      }
+    }
+    // Daily average vs budget
+    if (budgetPerDay > 0) {
+      if (dailyAverage < budgetPerDay * 0.8) {
+        insights.add('✅ Great pace! Spending ₹${dailyAverage.toStringAsFixed(0)}/day vs ₹${budgetPerDay.toStringAsFixed(0)} budgeted.');
+      } else if (dailyAverage > budgetPerDay) {
+        insights.add('⚠️ Spending ₹${dailyAverage.toStringAsFixed(0)}/day — exceeds daily budget of ₹${budgetPerDay.toStringAsFixed(0)}!');
+      }
+    }
+    // Compare to last month
+    if (prevMonthSpent > 0) {
+      final diff = ((totalSpent - prevMonthSpent) / prevMonthSpent * 100).abs();
+      if (totalSpent < prevMonthSpent) {
+        insights.add('📉 ${diff.toStringAsFixed(0)}% less spending than last month. Nice!');
+      } else {
+        insights.add('📈 ${diff.toStringAsFixed(0)}% more spending than last month.');
+      }
+    }
+    // Top category
+    if (categoryBreakdown.isNotEmpty) {
+      final top = categoryBreakdown.first;
+      final pct = totalSpent > 0 ? (top.amount / totalSpent * 100).toStringAsFixed(0) : '0';
+      insights.add('${top.emoji} ${top.category} is your biggest spend at $pct% of total.');
+    }
+  }
+
+  return AnalyticsSummary(
+    totalSpent: totalSpent,
+    totalIncome: totalIncome,
+    budgetLeft: budgetLeft,
+    dailyAverage: dailyAverage,
+    budgetPerDay: budgetPerDay,
+    categoryBreakdown: categoryBreakdown,
+    smartInsights: insights,
+    dailySpending: dailySpending,
+    dayOfWeekSpending: dayOfWeekSpending,
+    prevMonthSpent: prevMonthSpent,
+    prevMonthName: DateFormat('MMMM').format(prevMonth),
+    currentMonthName: DateFormat('MMMM').format(now),
+    budgetTotal: budgetTotal,
+  );
 });

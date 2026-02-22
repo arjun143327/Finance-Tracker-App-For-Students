@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import 'theme/neo_colors.dart';
 import 'goal_creation_screen.dart';
 import 'budget_setup_screen.dart';
+import 'providers/finance_providers.dart';
 
-class AnalyticsScreen extends StatefulWidget {
+class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+  ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
+class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   String selectedPeriod = 'Month';
-  String currentMonth = 'January 2026';
 
   @override
   Widget build(BuildContext context) {
+    final analytics = ref.watch(analyticsProvider);
+
     return Scaffold(
       backgroundColor: NeoColors.cream,
       body: Stack(
@@ -47,7 +50,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
           ),
-          
+
           SafeArea(
             bottom: false,
             child: SingleChildScrollView(
@@ -55,31 +58,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTopBar(),
+                  _buildTopBar(analytics),
                   const SizedBox(height: 24),
-                  _buildSummaryCard(),
+                  _buildSummaryCard(analytics),
                   const SizedBox(height: 24),
                   _buildTimePeriodTabs(),
                   const SizedBox(height: 24),
-                  _buildSpendingTrendChart(),
+                  _buildSpendingTrendChart(analytics),
                   const SizedBox(height: 24),
-                  _buildCategoryBreakdown(),
+                  _buildCategoryBreakdown(analytics),
                   const SizedBox(height: 24),
-                  _buildSmartInsights(),
+                  _buildSmartInsights(analytics),
                   const SizedBox(height: 24),
-                  _buildDailyAverage(),
+                  _buildDailyAverage(analytics),
                   const SizedBox(height: 24),
-                  _buildExpenseDistribution(),
+                  _buildExpenseDistribution(analytics),
                   const SizedBox(height: 24),
-                  _buildCompareMonths(),
-                  const SizedBox(height: 24),
-                  _buildExportButton(),
+                  _buildCompareMonths(analytics),
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-          
+
           // Bottom Nav
           Positioned(
             left: 0,
@@ -92,9 +93,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(AnalyticsSummary analytics) {
     return Container(
-      height: 80,
+      height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -107,46 +108,39 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               color: NeoColors.black,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  // Previous month logic
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  child: const Icon(Icons.chevron_left, size: 20, color: NeoColors.darkGray),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                currentMonth,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: NeoColors.darkGray,
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  // Next month logic
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  child: const Icon(Icons.chevron_right, size: 20, color: NeoColors.darkGray),
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            analytics.currentMonthName,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: NeoColors.gray,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(AnalyticsSummary analytics) {
+    final prevSpent = analytics.prevMonthSpent;
+    final currSpent = analytics.totalSpent;
+    String comparison = '';
+    Color compColor = NeoColors.gray;
+    if (prevSpent > 0) {
+      final diff = ((currSpent - prevSpent) / prevSpent * 100).abs().toStringAsFixed(0);
+      if (currSpent < prevSpent) {
+        comparison = '$diff% less than last month 📉';
+        compColor = NeoColors.green;
+      } else if (currSpent > prevSpent) {
+        comparison = '$diff% more than last month 📈';
+        compColor = NeoColors.red;
+      } else {
+        comparison = 'Same as last month';
+        compColor = NeoColors.gray;
+      }
+    }
+
     return Transform.rotate(
       angle: -1.5 * 3.14159 / 180,
       child: Container(
@@ -179,31 +173,33 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  '₹2,500',
-                  style: TextStyle(
+                Text(
+                  '₹${analytics.totalSpent.toStringAsFixed(0)}',
+                  style: const TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w900,
                     color: NeoColors.black,
                     height: 1,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  '17% less than last month 📉',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: NeoColors.green,
-                    fontWeight: FontWeight.w700,
+                if (comparison.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    comparison,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: compColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
                       child: Text(
-                        'Income: ₹6,000',
+                        'Income: ₹${analytics.totalIncome.toStringAsFixed(0)}',
                         style: const TextStyle(fontSize: 11, color: NeoColors.black, fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -211,7 +207,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
-                        'Saved: ₹3,500',
+                        'Saved: ₹${(analytics.totalIncome - analytics.totalSpent).clamp(0, double.infinity).toStringAsFixed(0)}',
                         style: const TextStyle(fontSize: 11, color: NeoColors.green, fontWeight: FontWeight.w700),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -219,8 +215,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
-                        'Budget Left: ₹3,500',
-                        style: const TextStyle(fontSize: 11, color: NeoColors.orange, fontWeight: FontWeight.w700),
+                        'Budget Left: ₹${analytics.budgetLeft.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: analytics.budgetLeft >= 0 ? NeoColors.orange : NeoColors.red,
+                          fontWeight: FontWeight.w700,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -253,11 +253,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final isSelected = selectedPeriod == label;
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedPeriod = label;
-          });
-        },
+        onTap: () => setState(() => selectedPeriod = label),
         child: Container(
           height: 40,
           decoration: BoxDecoration(
@@ -287,7 +283,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildSpendingTrendChart() {
+  Widget _buildSpendingTrendChart(AnalyticsSummary analytics) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -301,7 +297,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               color: NeoColors.black,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Text(
+            analytics.dailySpending.isEmpty
+                ? 'No data yet'
+                : 'Daily breakdown for ${analytics.currentMonthName}',
+            style: const TextStyle(fontSize: 12, color: NeoColors.gray),
+          ),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -316,28 +319,46 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ],
             ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Column(
-                  children: [
-                    SizedBox(
-                      height: 200,
-                      width: constraints.maxWidth,
-                      child: CustomPaint(
-                        painter: BarChartPainter(),
+            child: analytics.dailySpending.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 60),
+                    child: Center(
+                      child: Text(
+                        'Add transactions to see trend',
+                        style: TextStyle(color: NeoColors.gray, fontSize: 13),
                       ),
                     ),
-                  ],
-                );
-              },
-            ),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final now = DateTime.now();
+                      return SizedBox(
+                        height: 200,
+                        width: constraints.maxWidth,
+                        child: CustomPaint(
+                          painter: DailyBarChartPainter(
+                            dailySpending: analytics.dailySpending,
+                            daysInMonth: DateUtils.getDaysInMonth(now.year, now.month),
+                            today: now.day,
+                            dailyAverage: analytics.dailyAverage,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryBreakdown() {
+  Widget _buildCategoryBreakdown(AnalyticsSummary analytics) {
+    final cats = analytics.categoryBreakdown.where((c) => c.amount > 0).take(4).toList();
+    final totalSpent = analytics.totalSpent;
+
+    // Colors for donut slices
+    const sliceColors = [NeoColors.orange, NeoColors.blue, Color(0xFF9775FA), NeoColors.green];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -366,64 +387,93 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ],
             ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final chartSize = math.min(constraints.maxWidth * 0.4, 140.0);
-                return Row(
-                  children: [
-                    SizedBox(
-                      width: chartSize,
-                      height: chartSize,
-                      child: Stack(
+            child: cats.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 30),
+                    child: Center(
+                      child: Text(
+                        'No expenses this month yet',
+                        style: TextStyle(color: NeoColors.gray, fontSize: 13),
+                      ),
+                    ),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final chartSize = math.min(constraints.maxWidth * 0.4, 140.0);
+                      final percentages = cats
+                          .map((c) => totalSpent > 0 ? c.amount / totalSpent : 0.0)
+                          .toList();
+
+                      return Row(
                         children: [
-                          CustomPaint(
-                            size: Size(chartSize, chartSize),
-                            painter: DonutChartPainter(),
+                          SizedBox(
+                            width: chartSize,
+                            height: chartSize,
+                            child: Stack(
+                              children: [
+                                CustomPaint(
+                                  size: Size(chartSize, chartSize),
+                                  painter: DonutChartPainter(percentages: percentages),
+                                ),
+                                Center(
+                                  child: Text(
+                                    '₹${totalSpent.toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                      fontSize: math.min(chartSize * 0.13, 16),
+                                      fontWeight: FontWeight.w900,
+                                      color: NeoColors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          Center(
-                            child: Text(
-                              '₹2,500',
-                              style: TextStyle(
-                                fontSize: math.min(chartSize * 0.13, 18),
-                                fontWeight: FontWeight.w900,
-                                color: NeoColors.black,
-                              ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: List.generate(cats.length, (i) {
+                                final cat = cats[i];
+                                final pct = totalSpent > 0
+                                    ? (cat.amount / totalSpent * 100).toStringAsFixed(0)
+                                    : '0';
+                                final colorDot = i < sliceColors.length
+                                    ? sliceColors[i]
+                                    : NeoColors.gray;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: _buildLegendItem(
+                                    colorDot,
+                                    cat.category.split(' ').first,
+                                    '₹${cat.amount.toStringAsFixed(0)} ($pct%)',
+                                  ),
+                                );
+                              }),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildLegendItem('🟧', 'Food', '₹1,175 (47%)', NeoColors.orange),
-                          const SizedBox(height: 6),
-                          _buildLegendItem('🟦', 'Transport', '₹475 (19%)', NeoColors.blue),
-                          const SizedBox(height: 6),
-                          _buildLegendItem('🟪', 'Entertain.', '₹625 (25%)', const Color(0xFF9775FA)),
-                          const SizedBox(height: 6),
-                          _buildLegendItem('🟩', 'Shopping', '₹225 (9%)', NeoColors.green),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(String emoji, String category, String amount, Color color) {
+  Widget _buildLegendItem(Color color, String category, String amount) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 10)),
-        const SizedBox(width: 4),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: NeoColors.black, width: 1.5),
+          ),
+        ),
+        const SizedBox(width: 6),
         Expanded(
           child: Text(
             '$category $amount',
@@ -440,7 +490,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildSmartInsights() {
+  Widget _buildSmartInsights(AnalyticsSummary analytics) {
+    final insightStyles = [
+      const Color(0xFFFFF9E6), // yellow
+      const Color(0xFFFFE5E5), // red
+      const Color(0xFFE8F5E9), // green
+      const Color(0xFFE3F2FD), // blue
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -455,23 +512,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildInsightCard(
-            '🔥',
-            "You're on a 5-day logging streak! Keep it up!",
-            const Color(0xFFFFF9E6),
-          ),
-          const SizedBox(height: 12),
-          _buildInsightCard(
-            '⚠️',
-            "Transport spending is 97% of budget. Watch out!",
-            const Color(0xFFFFE5E5),
-          ),
-          const SizedBox(height: 12),
-          _buildInsightCard(
-            '✨',
-            "Great! You've saved ₹500 more than last month",
-            const Color(0xFFE8F5E9),
-          ),
+          if (analytics.smartInsights.isEmpty)
+            _buildInsightCard('💡', 'Add transactions to get personalized insights!', insightStyles[0])
+          else
+            ...List.generate(analytics.smartInsights.length, (i) {
+              final insight = analytics.smartInsights[i];
+              final bg = insightStyles[i % insightStyles.length];
+              // Extract emoji from start of string
+              final parts = insight.split(' ');
+              final emoji = parts.first;
+              final text = parts.skip(1).join(' ');
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildInsightCard(emoji, text, bg),
+              );
+            }),
         ],
       ),
     );
@@ -511,7 +566,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildDailyAverage() {
+  Widget _buildDailyAverage(AnalyticsSummary analytics) {
+    final avg = analytics.dailyAverage;
+    final budget = analytics.budgetPerDay;
+    final pct = budget > 0 ? (avg / budget).clamp(0.0, 1.0) : 0.0;
+    final isOverBudget = avg > budget && budget > 0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
@@ -540,20 +600,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              '₹147/day',
-              style: TextStyle(
+            Text(
+              '₹${avg.toStringAsFixed(0)}/day',
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
                 color: NeoColors.black,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Budget allows ₹205/day',
+            Text(
+              budget > 0
+                  ? isOverBudget
+                      ? 'Over budget! Limit is ₹${budget.toStringAsFixed(0)}/day'
+                      : 'Budget allows ₹${budget.toStringAsFixed(0)}/day'
+                  : 'Set a budget to see your daily limit',
               style: TextStyle(
                 fontSize: 13,
-                color: NeoColors.green,
+                color: isOverBudget ? NeoColors.red : NeoColors.green,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -566,8 +630,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
-                widthFactor: 0.72,
-                child: Container(color: NeoColors.green),
+                widthFactor: pct,
+                child: Container(color: isOverBudget ? NeoColors.red : NeoColors.green),
               ),
             ),
           ],
@@ -576,7 +640,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildExpenseDistribution() {
+  Widget _buildExpenseDistribution(AnalyticsSummary analytics) {
+    final dow = analytics.dayOfWeekSpending;
+    final maxVal = dow.values.fold(0.0, (a, b) => a > b ? a : b);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -611,7 +678,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   height: 160,
                   width: constraints.maxWidth,
                   child: CustomPaint(
-                    painter: DayOfWeekChartPainter(),
+                    painter: DayOfWeekChartPainter(
+                      dayData: dow,
+                      maxValue: maxVal > 0 ? maxVal : 1,
+                    ),
                   ),
                 );
               },
@@ -622,7 +692,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildCompareMonths() {
+  Widget _buildCompareMonths(AnalyticsSummary analytics) {
+    final curr = analytics.totalSpent;
+    final prev = analytics.prevMonthSpent;
+    final maxVal = math.max(curr, prev);
+    final currWidth = maxVal > 0 ? curr / maxVal : 0.0;
+    final prevWidth = maxVal > 0 ? prev / maxVal : 0.0;
+
+    String compText = '';
+    Color compColor = NeoColors.gray;
+    if (prev > 0 && curr > 0) {
+      final diff = ((curr - prev) / prev * 100).abs().toStringAsFixed(0);
+      if (curr < prev) {
+        compText = '-$diff% this month 🎉';
+        compColor = NeoColors.green;
+      } else {
+        compText = '+$diff% this month';
+        compColor = NeoColors.red;
+      }
+    } else if (prev == 0 && curr > 0) {
+      compText = 'First month tracking!';
+      compColor = NeoColors.blue;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -653,139 +745,86 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
             child: Column(
               children: [
+                // Prev month
                 Row(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'December',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: NeoColors.gray,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: NeoColors.gray.withOpacity(0.3),
-                              border: Border.all(color: NeoColors.black, width: 3),
-                            ),
-                            child: const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 8),
-                                child: Text(
-                                  '₹3,200',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: NeoColors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        analytics.prevMonthName,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: NeoColors.gray),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'January',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: NeoColors.gray,
+                      child: Container(
+                        height: 36,
+                        color: const Color(0xFFE5E5E5),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: prevWidth,
+                          child: Container(
+                            color: NeoColors.gray.withOpacity(0.5),
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              prev > 0 ? '₹${prev.toStringAsFixed(0)}' : '—',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: NeoColors.black),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: NeoColors.orange,
-                              border: Border.all(color: NeoColors.black, width: 3),
-                            ),
-                            child: const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 8),
-                                child: Text(
-                                  '₹2,500',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: NeoColors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  '-22% this month',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: NeoColors.green,
-                  ),
+                const SizedBox(height: 10),
+                // Current month
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        analytics.currentMonthName,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: NeoColors.black),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 36,
+                        color: const Color(0xFFE5E5E5),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: currWidth,
+                          child: Container(
+                            color: NeoColors.orange,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              curr > 0 ? '₹${curr.toStringAsFixed(0)}' : '—',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: NeoColors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                if (compText.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    compText,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: compColor,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildExportButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: GestureDetector(
-        onTap: () {
-          // Export functionality
-        },
-        child: Container(
-          height: 52,
-          decoration: BoxDecoration(
-            color: NeoColors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: NeoColors.black, width: 3),
-            boxShadow: const [
-              BoxShadow(
-                color: NeoColors.black,
-                offset: Offset(4, 4),
-                blurRadius: 0,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text('📊', style: TextStyle(fontSize: 20)),
-              SizedBox(width: 8),
-              Text(
-                'Export Report',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: NeoColors.black,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -837,11 +876,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 shape: BoxShape.circle,
               ),
             ),
-          Icon(
-            icon,
-            size: 26,
-            color: isActive ? NeoColors.orange : NeoColors.gray,
-          ),
+          Icon(icon, size: 26, color: isActive ? NeoColors.orange : NeoColors.gray),
           const SizedBox(height: 4),
           Text(
             label,
@@ -857,231 +892,209 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 }
 
-// Custom Painter for Bar Chart
-class BarChartPainter extends CustomPainter {
+// --- Custom Painters ---
+
+// Bar chart: daily spending for current month
+class DailyBarChartPainter extends CustomPainter {
+  final Map<int, double> dailySpending;
+  final int daysInMonth;
+  final int today;
+  final double dailyAverage;
+
+  DailyBarChartPainter({
+    required this.dailySpending,
+    required this.daysInMonth,
+    required this.today,
+    required this.dailyAverage,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = NeoColors.orange
-      ..style = PaintingStyle.fill;
+    // Show last 10 days with data (or today's range)
+    final activeDays = dailySpending.keys.toList()..sort();
+    if (activeDays.isEmpty) return;
 
+    final showDays = activeDays.length > 10 ? activeDays.sublist(activeDays.length - 10) : activeDays;
+    final maxVal = dailySpending.values.fold(0.0, (a, b) => a > b ? a : b);
+    if (maxVal == 0) return;
+
+    final paint = Paint()..style = PaintingStyle.fill;
     final borderPaint = Paint()
       ..color = NeoColors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
+      ..strokeWidth = 2.5;
     final gridPaint = Paint()
       ..color = NeoColors.gray.withOpacity(0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
-    // Data for 7 days
-    final List<double> data = [350, 280, 420, 310, 480, 390, 270];
-    final List<String> labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final double barWidth = (size.width - 40) / showDays.length;
+    final double chartHeight = size.height - 35;
 
-    final double barWidth = (size.width - 60) / 7;
-    final double maxValue = 500;
-    final double chartHeight = size.height - 40;
-
-    // Draw grid lines
-    for (int i = 0; i <= 5; i++) {
-      final y = chartHeight - (chartHeight * i / 5);
-      canvas.drawLine(
-        Offset(30, y),
-        Offset(size.width - 10, y),
-        gridPaint,
-      );
+    // Grid lines
+    for (int i = 0; i <= 4; i++) {
+      final y = chartHeight - (chartHeight * i / 4);
+      canvas.drawLine(Offset(20, y), Offset(size.width - 10, y), gridPaint);
     }
 
-    // Draw bars
-    for (int i = 0; i < data.length; i++) {
-      final x = 35 + i * barWidth;
-      final barHeight = (data[i] / maxValue) * chartHeight;
-      final y = chartHeight - barHeight;
+    for (int i = 0; i < showDays.length; i++) {
+      final day = showDays[i];
+      final amount = dailySpending[day] ?? 0;
+      final x = 20 + i * barWidth;
+      final barH = (amount / maxVal) * chartHeight;
+      final y = chartHeight - barH;
 
-      // Bar fill
-      canvas.drawRect(
-        Rect.fromLTWH(x, y, barWidth - 10, barHeight),
-        paint,
-      );
+      paint.color = day == today ? NeoColors.orange : NeoColors.blue.withOpacity(0.7);
+      canvas.drawRect(Rect.fromLTWH(x, y, barWidth - 6, barH), paint);
+      canvas.drawRect(Rect.fromLTWH(x, y, barWidth - 6, barH), borderPaint);
 
-      // Bar border
-      canvas.drawRect(
-        Rect.fromLTWH(x, y, barWidth - 10, barHeight),
-        borderPaint,
-      );
-
-      // Labels
+      // Day label
       final textPainter = TextPainter(
         text: TextSpan(
-          text: labels[i],
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: NeoColors.darkGray,
-          ),
+          text: '$day',
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: NeoColors.darkGray),
         ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout(maxWidth: barWidth);
-      final textX = x + (barWidth - 10) / 2 - textPainter.width / 2;
-      final textY = size.height - 25;
-      if (textX >= 0 && textX + textPainter.width <= size.width) {
-        textPainter.paint(canvas, Offset(textX, textY));
-      }
+      textPainter.paint(canvas, Offset(x + (barWidth - 6) / 2 - textPainter.width / 2, size.height - 22));
     }
 
-    // Draw average line (dashed)
-    final avgY = chartHeight - (380 / maxValue) * chartHeight;
-    final dashWidth = 5.0;
-    final dashSpace = 3.0;
-    double startX = 30;
-    
-    final dashedPaint = Paint()
-      ..color = NeoColors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    while (startX < size.width - 10) {
-      canvas.drawLine(
-        Offset(startX, avgY),
-        Offset(math.min(startX + dashWidth, size.width - 10), avgY),
-        dashedPaint,
-      );
-      startX += dashWidth + dashSpace;
+    // Average dashed line
+    if (dailyAverage > 0) {
+      final avgY = chartHeight - (dailyAverage / maxVal).clamp(0.0, 1.0) * chartHeight;
+      final dashedPaint = Paint()
+        ..color = NeoColors.red.withOpacity(0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+      double startX = 20;
+      while (startX < size.width - 10) {
+        canvas.drawLine(Offset(startX, avgY), Offset(math.min(startX + 5, size.width - 10), avgY), dashedPaint);
+        startX += 9;
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant DailyBarChartPainter old) =>
+      old.dailySpending != dailySpending || old.today != today;
 }
 
-// Custom Painter for Donut Chart
+// Donut chart with real category percentages
 class DonutChartPainter extends CustomPainter {
+  final List<double> percentages;
+
+  DonutChartPainter({required this.percentages});
+
+  static const List<Color> _colors = [
+    NeoColors.orange,
+    NeoColors.blue,
+    Color(0xFF9775FA),
+    NeoColors.green,
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
     final centerX = size.width / 2;
     final centerY = size.height / 2;
     final radius = math.min(centerX, centerY) - 10;
 
-    final List<double> percentages = [0.47, 0.19, 0.25, 0.09];
-    final List<Color> colors = [
-      NeoColors.orange,
-      NeoColors.blue,
-      const Color(0xFF9775FA),
-      NeoColors.green,
-    ];
-
     double startAngle = -math.pi / 2;
+    final total = percentages.fold(0.0, (a, b) => a + b);
+    if (total == 0) return;
 
     for (int i = 0; i < percentages.length; i++) {
       final sweepAngle = 2 * math.pi * percentages[i];
-
-      // Fill
-      final paint = Paint()
-        ..color = colors[i]
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 30;
+      final color = i < _colors.length ? _colors[i] : NeoColors.gray;
 
       canvas.drawArc(
         Rect.fromCircle(center: Offset(centerX, centerY), radius: radius - 15),
         startAngle,
         sweepAngle,
         false,
-        paint,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 28,
       );
 
-      // Border
-      final borderPaint = Paint()
-        ..color = NeoColors.black
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3;
-
       canvas.drawArc(
         Rect.fromCircle(center: Offset(centerX, centerY), radius: radius - 15),
         startAngle,
         sweepAngle,
         false,
-        borderPaint,
+        Paint()
+          ..color = NeoColors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5,
       );
 
       startAngle += sweepAngle;
     }
 
-    // Outer circle border
-    final outerBorderPaint = Paint()
-      ..color = NeoColors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    canvas.drawCircle(Offset(centerX, centerY), radius, outerBorderPaint);
-    canvas.drawCircle(Offset(centerX, centerY), radius - 30, outerBorderPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Custom Painter for Day of Week Chart
-class DayOfWeekChartPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
-
+    // Outer/inner ring borders
     final borderPaint = Paint()
       ..color = NeoColors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 2.5;
+    canvas.drawCircle(Offset(centerX, centerY), radius, borderPaint);
+    canvas.drawCircle(Offset(centerX, centerY), radius - 30, borderPaint);
+  }
 
-    final List<double> data = [200, 350, 280, 320, 600, 450, 400];
-    final List<String> labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  @override
+  bool shouldRepaint(covariant DonutChartPainter old) => old.percentages != percentages;
+}
 
+// Day of week chart using real data
+class DayOfWeekChartPainter extends CustomPainter {
+  final Map<String, double> dayData;
+  final double maxValue;
+
+  DayOfWeekChartPainter({required this.dayData, required this.maxValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final borderPaint = Paint()
+      ..color = NeoColors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final double barWidth = (size.width - 40) / 7;
-    final double maxValue = 650;
     final double chartHeight = size.height - 30;
 
-    for (int i = 0; i < data.length; i++) {
+    // Find highest day
+    String? maxDay;
+    double maxAmt = 0;
+    dayData.forEach((k, v) {
+      if (v > maxAmt) { maxAmt = v; maxDay = k; }
+    });
+
+    for (int i = 0; i < labels.length; i++) {
+      final label = labels[i];
+      final amount = dayData[label] ?? 0;
       final x = 20 + i * barWidth;
-      final barHeight = (data[i] / maxValue) * chartHeight;
-      final y = chartHeight - barHeight;
-      
-      // Highlight Friday (index 4)
-      paint.color = i == 4 ? NeoColors.orange : NeoColors.white;
+      final barH = (amount / maxValue) * chartHeight;
+      final y = chartHeight - barH;
 
-      // Bar fill
-      canvas.drawRect(
-        Rect.fromLTWH(x, y, barWidth - 8, barHeight),
-        paint,
-      );
+      paint.color = label == maxDay ? NeoColors.orange : NeoColors.white;
+      canvas.drawRect(Rect.fromLTWH(x, y, barWidth - 8, barH), paint);
+      canvas.drawRect(Rect.fromLTWH(x, y, barWidth - 8, barH), borderPaint);
 
-      // Bar border
-      canvas.drawRect(
-        Rect.fromLTWH(x, y, barWidth - 8, barHeight),
-        borderPaint,
-      );
-
-      // Labels
       final textPainter = TextPainter(
         text: TextSpan(
-          text: labels[i],
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: NeoColors.black,
-          ),
+          text: label.substring(0, 1),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: NeoColors.black),
         ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout(maxWidth: barWidth);
       final textX = x + (barWidth - 8) / 2 - textPainter.width / 2;
-      final textY = size.height - 20;
-      if (textX >= 0 && textX + textPainter.width <= size.width) {
-        textPainter.paint(canvas, Offset(textX, textY));
-      }
+      textPainter.paint(canvas, Offset(textX, size.height - 20));
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant DayOfWeekChartPainter old) => old.dayData != dayData;
 }
