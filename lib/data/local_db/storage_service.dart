@@ -47,4 +47,9 @@ class StorageService {
   Future<void> saveBudget(Budget budget) async {
     await _budgetBox.put(budget.id, budget);
   }
+
+  // Returns true if the user has completed initial setup (any budget saved)
+  bool hasCompletedSetup() {
+    return _budgetBox.isNotEmpty;
+  }
 }
