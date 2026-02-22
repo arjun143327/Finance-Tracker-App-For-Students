@@ -3,6 +3,12 @@ allprojects {
         google()
         mavenCentral()
     }
+    // Force path_provider_android to a version compatible with Android SDK 36
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.core:core:1.12.0")
+        }
+    }
 }
 
 val newBuildDir: Directory =
