@@ -1,0 +1,333 @@
+UI/UX DESIGN GUIDELINES
+
+Project: Budgetrix
+Version: 1.0
+
+--------------------------------------------------
+
+1. PURPOSE
+
+This document defines the UI/UX principles and design system for Budgetrix.
+
+The goal is to ensure:
+- Consistent design across screens
+- Premium and calm user experience
+- High readability and usability
+- Clean and minimal interface
+
+--------------------------------------------------
+
+2. DESIGN PHILOSOPHY
+
+Budgetrix follows a “Luxury Calm Finance” design approach.
+
+The app should feel:
+- Premium
+- Warm
+- Minimal
+- Thoughtful
+
+NOT:
+- Flashy
+- Overloaded
+- Generic fintech
+- Data-heavy dashboards
+
+The interface should feel like a personal financial journal rather than a technical tool.
+
+--------------------------------------------------
+
+3. COLOR SYSTEM
+
+3.1 Background
+
+- Deep chocolate gradient
+  (#1A120D → #2B1E16)
+
+- Background must feel rich and matte
+- Avoid flat or dull colors
+
+---
+
+3.2 Cards (Glassmorphism)
+
+- Caramel glass style
+- Semi-transparent caramel tone
+- Backdrop blur: 8px–12px
+- Soft border with low opacity
+
+Cards should feel:
+- Layered
+- Light
+- Floating above background
+
+---
+
+3.3 Primary Colors
+
+- Caramel / Gold: #C69C6D
+- Secondary caramel tones: darker browns
+
+---
+
+3.4 Status Colors
+
+- Income: Muted green
+- Expense: Soft red
+- Warning: Warm amber
+
+Avoid bright or neon colors.
+
+---
+
+3.5 Text Colors
+
+- Primary text: Off-white (#F5F2EE)
+- Secondary text: Muted beige
+- Avoid dark text on dark background
+
+--------------------------------------------------
+
+4. TYPOGRAPHY
+
+4.1 Fonts
+
+- Headings: Elegant serif (luxury style)
+- Body: Clean sans-serif
+
+---
+
+4.2 Hierarchy
+
+Use strong hierarchy:
+
+- Balance: Very large, dominant
+- Section titles: Medium-large
+- Body text: Standard readable size
+- Secondary text: Smaller, muted
+
+---
+
+4.3 Guidelines
+
+- Avoid too many font sizes
+- Maintain consistent spacing between text elements
+- Prioritize readability over decoration
+
+--------------------------------------------------
+
+5. LAYOUT AND SPACING
+
+5.1 Spacing System
+
+Use consistent spacing scale:
+- 8px
+- 12px
+- 16px
+- 24px
+
+---
+
+5.2 Layout Rules
+
+- Maintain clear separation between sections
+- Use padding inside cards consistently
+- Avoid crowded layouts
+
+---
+
+5.3 Screen Structure
+
+Each screen should follow:
+
+- Clear top section
+- Primary content
+- Supporting content
+- Action elements
+
+--------------------------------------------------
+
+6. COMPONENT DESIGN
+
+6.1 Cards
+
+- Rounded corners (12–18px)
+- Soft shadow + glass effect
+- Minimal borders
+
+---
+
+6.2 Buttons
+
+- Gradient background (caramel → brown)
+- Rounded corners
+- Clear label
+- Slight elevation
+
+---
+
+6.3 Lists (Transactions)
+
+- Clean, spaced rows
+- Minimal text
+- Use icons subtly
+
+---
+
+6.4 Input Fields
+
+- Simple and minimal
+- Clear focus state
+- Avoid heavy outlines
+
+--------------------------------------------------
+
+7. SCREEN-SPECIFIC GUIDELINES
+
+7.1 Dashboard
+
+- Balance must be the focal point
+- Show only essential information
+- Include one insight card
+- Avoid overcrowding
+
+---
+
+7.2 Transactions
+
+- Journal-like layout
+- Clear spacing between items
+- Minimal filtering UI
+
+---
+
+7.3 Add Expense
+
+- Large amount input
+- Minimal fields
+- Fast interaction
+
+---
+
+7.4 Budget Screen
+
+- Visual progress bars
+- Clean category cards
+- Avoid duplication of data
+
+---
+
+7.5 Insights Screen
+
+- Text-based insights first
+- Charts are secondary
+- Limit insights to 2–3 items
+
+---
+
+7.6 SMS Reminder Section
+
+- Show “Pending Entries”
+- Keep layout simple
+- Focus on quick action
+
+--------------------------------------------------
+
+8. ANIMATION GUIDELINES
+
+8.1 General Principles
+
+- Animations must be smooth and subtle
+- Avoid fast or flashy effects
+- Use animation to enhance clarity, not distract
+
+---
+
+8.2 Required Animations
+
+- Screen load:
+  fade + slide up
+
+- Balance:
+  number count animation
+
+- Cards:
+  staggered appearance
+
+- Buttons:
+  slight scale on tap (1 → 1.02)
+
+- Navigation:
+  smooth transitions
+
+---
+
+8.3 Timing
+
+- Duration: 200ms – 800ms
+- Use ease-in-out curves
+
+--------------------------------------------------
+
+9. USER EXPERIENCE PRINCIPLES
+
+- Reduce user effort
+- Show only necessary information
+- Make actions quick and clear
+- Maintain consistency across screens
+
+---
+
+9.1 Clarity
+
+- Avoid confusing layouts
+- Use simple language
+- Keep UI predictable
+
+---
+
+9.2 Feedback
+
+- Provide visual response for actions
+- Show confirmation for important steps
+
+---
+
+9.3 Simplicity
+
+- Fewer elements per screen
+- Avoid overloading with data
+
+--------------------------------------------------
+
+10. ACCESSIBILITY
+
+- Maintain good contrast between text and background
+- Use readable font sizes
+- Avoid very small text
+- Ensure buttons are easily tappable
+
+--------------------------------------------------
+
+11. CONSISTENCY RULES
+
+- Same spacing across screens
+- Same typography hierarchy
+- Same component styles
+
+Avoid:
+- Random variations
+- Inconsistent layouts
+
+--------------------------------------------------
+
+12. SUMMARY
+
+The Budgetrix UI/UX should:
+
+- Feel premium and calm
+- Be easy to understand and use
+- Maintain consistency across all screens
+- Focus on insights, not data overload
+
+The design should reflect clarity, simplicity, and thoughtful interac

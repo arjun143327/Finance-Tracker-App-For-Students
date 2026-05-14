@@ -1,0 +1,233 @@
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+Product Name: Budgetrix
+Version: 1.1
+Date: April 2026
+
+--------------------------------------------------
+
+1. PRODUCT OVERVIEW
+
+1.1 Purpose
+
+Budgetrix is a mobile application designed for personal and academic use to help users track, understand, and improve their financial behavior.
+
+The application focuses on simplicity, clarity, and meaningful financial awareness rather than complex automation.
+
+---
+
+1.2 Problem Statement
+
+Most expense tracking applications suffer from:
+
+- High manual data entry effort
+- Overly complex and cluttered interfaces
+- Lack of meaningful and actionable insights
+- Low user retention due to limited long-term value
+
+Users often abandon such applications because they fail to provide ongoing usefulness beyond basic expense logging.
+
+---
+
+1.3 Solution
+
+Budgetrix addresses these challenges by:
+
+- Providing a clean and minimal expense tracking experience
+- Implementing a rule-based insight engine to analyze spending behavior
+- Presenting insights in simple, human-readable language
+- Using SMS detection as a reminder system instead of unreliable automation
+- Maintaining a calm, premium user experience
+
+---
+
+1.4 Intended Use
+
+This application is developed strictly for personal use and academic purposes.
+
+It is not intended for commercial deployment or public distribution.
+
+--------------------------------------------------
+
+2. GOALS AND OBJECTIVES
+
+2.1 Primary Goals
+
+- Minimize friction in expense tracking
+- Provide clear and useful financial insights
+- Encourage consistent user engagement
+- Maintain a premium and calm user experience
+
+---
+
+2.2 Success Metrics
+
+- Frequency of app usage
+- Number of logged transactions
+- User retention over time
+- User interaction with insights
+
+--------------------------------------------------
+
+3. TARGET USERS
+
+3.1 Primary Users
+
+- College students
+- Young professionals
+- Individuals managing personal expenses
+
+---
+
+3.2 Secondary Users
+
+- Users who prefer privacy (no bank linking)
+- Users in regions without reliable banking APIs
+
+--------------------------------------------------
+
+4. PRODUCT SCOPE
+
+4.1 In Scope
+
+- Manual expense tracking
+- Budget tracking
+- Insight-based summaries
+- SMS-based reminder system
+- Clean and minimal UI/UX
+
+---
+
+4.2 Out of Scope
+
+- Direct bank account integration
+- Investment tracking
+- OCR receipt scanning
+- Fully automated financial decision systems
+- Heavy AI-based predictions
+
+--------------------------------------------------
+
+5. FEATURE ROADMAP
+
+PHASE 1: CORE FUNCTIONALITY
+
+- Add, edit, and delete expenses
+- Category management
+- Dashboard with total balance
+- Transaction list
+- Basic budget tracking
+
+---
+
+PHASE 2: INSIGHTS
+
+- Weekly and monthly summaries
+- Spending comparisons (current vs previous periods)
+- Simple insight messages
+- Budget alerts
+
+---
+
+PHASE 3: SMART EXPENSE REMINDER
+
+- Detect transaction-like SMS messages
+- Send notification reminders:
+  "You made a payment of ₹XXX. Add it to Budgetrix?"
+
+- Add "Pending Entries" section inside the app
+- Provide pre-filled Add Expense screen
+
+---
+
+PHASE 4: INTELLIGENCE (LIGHTWEIGHT)
+
+- Rule-based behavioral insights
+- Pattern detection (weekly/monthly trends)
+- Natural language insight generation (template-based)
+- "Can I afford this?" feature using rule-based logic
+
+--------------------------------------------------
+
+6. INSIGHT ENGINE DESIGN
+
+Budgetrix uses a rule-based insight engine to analyze user spending behavior.
+
+The system:
+
+- Compares current and past spending data
+- Detects trends and anomalies
+- Generates insights using predefined logic rules
+
+Example:
+
+If current_food_spending > previous_food_spending:
+→ "You spent more on food this week"
+
+Insights are generated using templates to ensure clarity and consistency.
+
+Optional:
+A lightweight local model may be used in the future to improve phrasing, but not for core decision-making.
+
+--------------------------------------------------
+
+7. TECHNICAL ARCHITECTURE
+
+Frontend:
+- Flutter
+
+Backend (optional future use):
+- FastAPI
+
+Database:
+- SQLite (initial implementation)
+- Scalable to MySQL
+
+Core Modules:
+
+- Transaction Service
+- Budget Service
+- Insight Engine (rule-based)
+- SMS Reminder Module
+
+--------------------------------------------------
+
+8. SECURITY AND PRIVACY
+
+- No bank credentials required
+- Minimal permissions requested
+- SMS data used only for reminder detection
+- User data stored securely
+- User retains full control over data entry
+
+--------------------------------------------------
+
+9. UX/UI PRINCIPLES
+
+- Clean and minimal interface
+- Luxury and calm visual design
+- Strong typography hierarchy
+- Limited information per screen
+- Smooth and subtle animations
+- Focus on readability and clarity
+
+--------------------------------------------------
+
+10. KEY DIFFERENTIATOR
+
+Budgetrix is not just an expense tracker.
+
+It is a financial awareness tool focused on:
+
+- Simplicity over complexity
+- Insight over raw data
+- User control over automation
+- Calm and premium experience
+
+--------------------------------------------------
+
+11. CONCLUSION
+
+Budgetrix combines usability, thoughtful design, and insight-driven functionality to create a practical and refined personal finance application.
+
+The system emphasizes real-world usability, clarity, and consistency, making it suitable for both academic demonstration and personal use.

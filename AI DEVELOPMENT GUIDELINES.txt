@@ -1,0 +1,188 @@
+AI DEVELOPMENT GUIDELINES
+
+Project: Budgetrix
+Version: 1.0
+
+--------------------------------------------------
+
+1. PURPOSE
+
+This document defines coding standards for AI-assisted development.
+
+The goal is to ensure:
+- Clean code
+- Maintainable structure
+- Consistent design
+- Production-level quality
+
+--------------------------------------------------
+
+2. GENERAL PRINCIPLES
+
+- Always write clean and readable code
+- Avoid unnecessary complexity
+- Prefer simplicity over cleverness
+- Follow consistent structure
+
+--------------------------------------------------
+
+3. OPTIMIZATION
+
+- Avoid redundant computations
+- Use efficient logic
+- Choose appropriate data structures
+- Do not write repetitive code
+
+--------------------------------------------------
+
+4. DRY PRINCIPLE
+
+- Do not repeat logic
+- Extract reusable components
+- Use helper functions where needed
+
+--------------------------------------------------
+
+5. CODE STRUCTURE
+
+- Use modular architecture
+- Separate UI, logic, and data
+- Keep files organized
+
+Each component should have a single responsibility.
+
+--------------------------------------------------
+
+6. FUNCTION DESIGN
+
+- Keep functions short and focused
+- Each function should do one task
+- Avoid deep nesting
+
+--------------------------------------------------
+
+7. NAMING CONVENTIONS
+
+- Use meaningful names
+- Avoid short or unclear names
+
+Examples:
+Good: calculateMonthlyExpense
+Bad: calc1
+
+--------------------------------------------------
+
+8. CONSTANTS
+
+- Do not hardcode values
+- Use constants for fixed values
+- Use UPPER_CASE naming
+
+Example:
+MAX_BUDGET_LIMIT = 10000
+
+--------------------------------------------------
+
+9. COMMENTS
+
+- Avoid unnecessary comments
+- Do not explain obvious code
+- Add comments only for complex logic
+
+Prefer self-explanatory code.
+
+--------------------------------------------------
+
+10. WHAT TO AVOID
+
+- Repetitive code
+- Unused variables
+- Long functions
+- Deep nesting
+- Over-commenting
+
+--------------------------------------------------
+
+11. PERFORMANCE
+
+- Minimize time complexity
+- Avoid unnecessary loops
+- Optimize database queries
+
+--------------------------------------------------
+
+12. ERROR HANDLING
+
+- Handle all possible errors
+- Validate inputs
+- Prevent crashes
+- Use meaningful error messages
+
+--------------------------------------------------
+
+13. DATABASE RULES
+
+- Use clean schema design
+- Avoid redundancy
+- Use indexing if needed
+
+--------------------------------------------------
+
+14. SECURITY
+
+- Do not expose sensitive data
+- Validate all inputs
+- Avoid unsafe storage
+
+--------------------------------------------------
+
+15. UI/UX RULES
+
+- Keep UI minimal and clean
+- Avoid clutter
+- Use consistent spacing
+- Maintain readability
+
+--------------------------------------------------
+
+16. ANIMATION RULES
+
+- Use smooth and subtle animations
+- Avoid flashy or fast transitions
+- Use:
+  - fade + slide
+  - scale on tap
+  - number count animation
+
+--------------------------------------------------
+
+17. AI INSTRUCTIONS
+
+When generating code:
+
+- Follow all guidelines strictly
+- Write production-level code
+- Do not generate placeholder-heavy code
+- Do not take shortcuts
+- Maintain consistency across files
+
+--------------------------------------------------
+
+18. OUTPUT REQUIREMENTS
+
+- Provide complete working code
+- Use proper structure
+- Keep formatting clean
+- Avoid unnecessary explanations
+
+--------------------------------------------------
+
+19. SUMMARY
+
+All code must be:
+- Clean
+- Efficient
+- Scalable
+- Readable
+
+The goal is to build a professional-level application using AI assistance.
