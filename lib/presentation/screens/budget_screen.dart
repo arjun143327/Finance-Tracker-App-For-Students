@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_colors.dart';
-import '../../data/models/transaction_model.dart';
+
 import '../../data/providers/budget_provider.dart';
 import '../widgets/glass_card.dart';
 
@@ -78,37 +78,61 @@ class BudgetScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _BudgetSummaryCard(
-            totalBudget: totalBudget > 0 ? totalBudget : 1, // Avoid division by zero
-            totalSpent: totalSpent,
-            remaining: (totalBudget - totalSpent).clamp(0.0, double.infinity),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Category Spending',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 16),
-          if (categoryMap.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Center(
-                child: Text(
-                  'No expenses recorded this month.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
-                ),
+          if (totalBudget == 0)
+            GlassCard(
+              interactive: false,
+              child: Column(
+                children: [
+                  const Icon(Icons.edit_note_rounded, color: AppColors.primary, size: 36),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No budget set',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tap the edit icon above to set your monthly limit.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             )
-          else
-            ...categoryMap.entries.map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _BudgetCategoryTile(
-                category: entry.key,
-                spent: entry.value,
-                limit: totalBudget / 4, // Simple dynamic limit for now
-                accent: AppColors.primary,
-              ),
-            )),
+          else ...[
+            _BudgetSummaryCard(
+              totalBudget: totalBudget,
+              totalSpent: totalSpent,
+              remaining: (totalBudget - totalSpent).clamp(0.0, double.infinity),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Category Spending',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 16),
+            if (categoryMap.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text(
+                    'No expenses recorded this month.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                  ),
+                ),
+              )
+            else
+              ...categoryMap.entries.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _BudgetCategoryTile(
+                  category: entry.key,
+                  spent: entry.value,
+                  limit: totalBudget / categoryMap.length,
+                  accent: AppColors.primary,
+                ),
+              )),
+          ],
         ],
       ),
     );
@@ -129,13 +153,19 @@ class _BudgetSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final usage = (totalSpent / totalBudget).clamp(0.0, 1.0);
+    final isNearLimit = usage >= 0.85 && usage < 1.0;
+    final isOverLimit = totalSpent >= totalBudget;
+
+    Color statusColor = AppColors.primary;
+    if (isNearLimit) statusColor = AppColors.warning;
+    if (isOverLimit) statusColor = AppColors.expense;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.12),
+            color: statusColor.withOpacity(0.12),
             blurRadius: 26,
             spreadRadius: 1,
             offset: const Offset(-5, -7),
@@ -144,17 +174,30 @@ class _BudgetSummaryCard extends StatelessWidget {
       ),
       child: GlassCard(
         interactive: false,
+        borderColor: isOverLimit ? AppColors.expense.withOpacity(0.3) : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Monthly Overview',
-              style: Theme.of(context).textTheme.headlineMedium,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Monthly Overview',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                if (isOverLimit)
+                  const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24)
+                else if (isNearLimit)
+                  const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 24),
+              ],
             ),
             const SizedBox(height: 14),
             Text(
               '₹${totalSpent.toStringAsFixed(0)} / ₹${totalBudget.toStringAsFixed(0)} used',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: isOverLimit ? AppColors.expense : AppColors.textPrimary,
+                fontWeight: isOverLimit ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
             const SizedBox(height: 12),
             ClipRRect(
@@ -163,14 +206,14 @@ class _BudgetSummaryCard extends StatelessWidget {
                 value: usage,
                 minHeight: 10,
                 backgroundColor: Colors.white.withOpacity(0.08),
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Remaining: ₹${remaining.toStringAsFixed(0)}',
+              isOverLimit ? 'Budget exceeded by ₹${(totalSpent - totalBudget).toStringAsFixed(0)}' : 'Remaining: ₹${remaining.toStringAsFixed(0)}',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppColors.primaryLight,
+                color: isOverLimit ? AppColors.expense : AppColors.primaryLight,
               ),
             ),
           ],

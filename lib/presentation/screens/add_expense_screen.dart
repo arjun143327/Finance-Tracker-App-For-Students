@@ -60,7 +60,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       title: _titleController.text.trim(),
       category: _category,
       amount: amount,
-      date: DateTime.now(),
+      date: widget.initialTransaction?.date ?? DateTime.now(),
       method: _methodController.text.trim(),
       type: _type,
     );
