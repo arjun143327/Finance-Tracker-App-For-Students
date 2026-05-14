@@ -6,6 +6,7 @@ import '../../core/app_colors.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../data/providers/insights_provider.dart';
+import '../../data/providers/user_provider.dart';
 import 'settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -15,6 +16,15 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final txState = ref.watch(transactionsListProvider);
     final insights = ref.watch(insightsProvider);
+    final profileState = ref.watch(userProfileProvider);
+    final profile = profileState.valueOrNull;
+    final userName = profile?.name ?? 'User';
+    final initialBalance = profile?.balance ?? 0.0;
+
+    final hour = DateTime.now().hour;
+    String greeting = 'Good Evening';
+    if (hour < 12) greeting = 'Good Morning';
+    else if (hour < 17) greeting = 'Good Afternoon';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
@@ -36,11 +46,29 @@ class DashboardScreen extends ConsumerWidget {
                   child: const Icon(Icons.person_outline, color: AppColors.textSecondary),
                 ),
               ),
-              Text(
-                'Budgetrix',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  color: AppColors.primaryLight,
-                  letterSpacing: 0.3,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$greeting,',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        userName,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: AppColors.primaryLight,
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const Icon(Icons.notifications_none_rounded, color: AppColors.primary, size: 28),
@@ -86,7 +114,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             data: (transactions) {
-              final total = _calculateBalance(transactions);
+              final total = _calculateBalance(transactions, initialBalance);
               return TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: total),
                 duration: const Duration(milliseconds: 850),
@@ -231,8 +259,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 
 
-  double _calculateBalance(List<TransactionModel> transactions) {
-    return transactions.fold<double>(0, (sum, item) {
+  double _calculateBalance(List<TransactionModel> transactions, double initialBalance) {
+    return transactions.fold<double>(initialBalance, (sum, item) {
       if (item.type == TransactionType.income) return sum + item.amount;
       return sum - item.amount;
     });

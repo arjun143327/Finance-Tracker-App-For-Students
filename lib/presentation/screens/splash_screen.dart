@@ -1,17 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_theme.dart';
+import '../../data/providers/user_provider.dart';
 import 'app_shell.dart';
+import 'onboarding/welcome_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fade;
@@ -33,12 +36,16 @@ class _SplashScreenState extends State<SplashScreen>
 
     Timer(const Duration(milliseconds: 2400), () {
       if (!mounted) return;
+
+      final profileState = ref.read(userProfileProvider);
+      final isComplete = profileState.valueOrNull?.onboardingComplete ?? false;
+
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 450),
           pageBuilder: (_, animation, __) => FadeTransition(
             opacity: animation,
-            child: const AppShell(),
+            child: isComplete ? const AppShell() : const WelcomeScreen(),
           ),
         ),
       );
@@ -80,12 +87,22 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 26),
-                  Text(
-                    'Budgetrix',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 70,
-                        ),
+                  ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [AppColors.primaryLight, AppColors.primary, AppColors.primaryDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: Text(
+                      'Budgetrix',
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                            fontSize: 70,
+                            fontFamily: 'Playfair Display',
+                            fontStyle: FontStyle.italic,
+                            letterSpacing: -0.5,
+                          ),
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(

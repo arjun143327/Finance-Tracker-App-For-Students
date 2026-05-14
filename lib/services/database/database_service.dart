@@ -3,12 +3,14 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/models/category_model.dart';
-import 'package:flutter/material.dart' show Color, Colors, Icons, IconData;
+import '../../data/models/user_profile_model.dart';
+import 'package:flutter/material.dart' show Colors, Icons;
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   static Database? _database;
   static final List<Map<String, dynamic>> _webTransactionsStore = [];
+  static Map<String, dynamic>? _webUserProfileStore;
   static int _webIdCounter = 0;
 
   factory DatabaseService() => _instance;
@@ -59,6 +61,18 @@ class DatabaseService {
       CREATE TABLE budgets(
         month TEXT PRIMARY KEY,
         amount REAL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE user_profile(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        balance REAL,
+        income REAL,
+        budget REAL,
+        goal TEXT,
+        onboarding_complete INTEGER
       )
     ''');
 
@@ -181,5 +195,34 @@ class DatabaseService {
       where: 'id = ?',
       whereArgs: [transaction.id],
     );
+  }
+
+  // --- User Profile Methods ---
+
+  Future<UserProfileModel?> getUserProfile() async {
+    if (kIsWeb) {
+      if (_webUserProfileStore != null) {
+        return UserProfileModel.fromMap(_webUserProfileStore!);
+      }
+      return null;
+    }
+    Database db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('user_profile', limit: 1);
+    if (maps.isEmpty) return null;
+    return UserProfileModel.fromMap(maps.first);
+  }
+
+  Future<void> saveUserProfile(UserProfileModel profile) async {
+    if (kIsWeb) {
+      _webUserProfileStore = profile.toMap();
+      return;
+    }
+    Database db = await database;
+    final existing = await db.query('user_profile');
+    if (existing.isEmpty) {
+      await db.insert('user_profile', profile.toMap());
+    } else {
+      await db.update('user_profile', profile.toMap());
+    }
   }
 }

@@ -18,7 +18,15 @@ class BudgetNotifier extends StateNotifier<double> {
   String get _currentMonth => DateFormat('yyyy-MM').format(DateTime.now());
 
   Future<void> loadBudget() async {
-    state = await _dbService.getMonthlyBudget(_currentMonth);
+    double budget = await _dbService.getMonthlyBudget(_currentMonth);
+    if (budget == 0.0) {
+      final profile = await _dbService.getUserProfile();
+      if (profile != null && profile.budget > 0) {
+        budget = profile.budget;
+        await _dbService.saveMonthlyBudget(_currentMonth, budget);
+      }
+    }
+    state = budget;
   }
 
   Future<void> setBudget(double amount) async {
