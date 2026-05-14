@@ -1,20 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_colors.dart';
+import '../../data/models/transaction_model.dart';
+import '../../data/providers/budget_provider.dart';
 import '../widgets/glass_card.dart';
 
-class BudgetScreen extends StatelessWidget {
+class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
 
+  void _showSetBudgetDialog(BuildContext context, WidgetRef ref, double current) {
+    final controller = TextEditingController(text: current.toStringAsFixed(0));
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgGradientStart,
+        title: const Text('Set Monthly Budget', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Enter amount',
+            prefixText: '₹ ',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              final amount = double.tryParse(controller.text) ?? 0;
+              ref.read(monthlyBudgetProvider.notifier).setBudget(amount);
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalBudget = ref.watch(monthlyBudgetProvider);
+    final totalSpent = ref.watch(currentMonthSpendingProvider);
+    final transactions = ref.watch(currentMonthTransactionsProvider);
+
+    // Group spending by category
+    final categoryMap = <String, double>{};
+    for (var tx in transactions) {
+      categoryMap[tx.category] = (categoryMap[tx.category] ?? 0) + tx.amount;
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Budget',
-            style: Theme.of(context).textTheme.displayLarge,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Budget',
+                style: Theme.of(context).textTheme.displayLarge,
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
+                onPressed: () => _showSetBudgetDialog(context, ref, totalBudget),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -25,38 +79,36 @@ class BudgetScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _BudgetSummaryCard(
-            totalBudget: 24000,
-            totalSpent: 15320,
-            remaining: 8680,
+            totalBudget: totalBudget > 0 ? totalBudget : 1, // Avoid division by zero
+            totalSpent: totalSpent,
+            remaining: (totalBudget - totalSpent).clamp(0.0, double.infinity),
           ),
-          const SizedBox(height: 20),
-          _BudgetCategoryTile(
-            category: 'Food & Dining',
-            spent: 6200,
-            limit: 7000,
-            accent: AppColors.warning,
+          const SizedBox(height: 32),
+          Text(
+            'Category Spending',
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 14),
-          _BudgetCategoryTile(
-            category: 'Transport',
-            spent: 2600,
-            limit: 4500,
-            accent: AppColors.primary,
-          ),
-          const SizedBox(height: 14),
-          _BudgetCategoryTile(
-            category: 'Shopping',
-            spent: 4100,
-            limit: 4000,
-            accent: AppColors.expense,
-          ),
-          const SizedBox(height: 14),
-          _BudgetCategoryTile(
-            category: 'Bills & Utilities',
-            spent: 2420,
-            limit: 3000,
-            accent: AppColors.income,
-          ),
+          const SizedBox(height: 16),
+          if (categoryMap.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  'No expenses recorded this month.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ),
+              ),
+            )
+          else
+            ...categoryMap.entries.map((entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _BudgetCategoryTile(
+                category: entry.key,
+                spent: entry.value,
+                limit: totalBudget / 4, // Simple dynamic limit for now
+                accent: AppColors.primary,
+              ),
+            )),
         ],
       ),
     );

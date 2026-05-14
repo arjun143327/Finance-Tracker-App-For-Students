@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_theme.dart';
 import '../../data/models/transaction_model.dart';
+import '../../data/models/category_model.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../data/providers/category_provider.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/glass_card.dart';
 
@@ -26,15 +28,6 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   TransactionType _type = TransactionType.expense;
   bool _isSaving = false;
 
-  static const List<String> _categories = [
-    'Food',
-    'Transport',
-    'Shopping',
-    'Bills',
-    'Health',
-    'Education',
-    'Other',
-  ];
 
   @override
   void initState() {
@@ -86,6 +79,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initialTransaction != null;
+    final categoriesState = ref.watch(categoryListProvider);
+
     return Container(
       decoration: AppTheme.backgroundGradient,
       child: Scaffold(
@@ -153,16 +148,27 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           style: Theme.of(context).textTheme.labelLarge?.copyWith(letterSpacing: 1.3),
                         ),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: _category,
-                          dropdownColor: AppColors.bgGradientEnd,
-                          decoration: _inputDecoration(hint: 'Category'),
-                          items: _categories
-                              .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                              .toList(),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setState(() => _category = value);
+                        categoriesState.when(
+                          loading: () => const LinearProgressIndicator(color: AppColors.primary),
+                          error: (err, _) => Text('Error loading categories: $err'),
+                          data: (categories) {
+                            // Ensure the current selection is valid
+                            final categoryNames = categories.map((c) => c.name).toList();
+                            if (!categoryNames.contains(_category) && categoryNames.isNotEmpty) {
+                              _category = categoryNames.first;
+                            }
+                            return DropdownButtonFormField<String>(
+                              value: _category,
+                              dropdownColor: AppColors.bgGradientEnd,
+                              decoration: _inputDecoration(hint: 'Category'),
+                              items: categoryNames
+                                  .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                                  .toList(),
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() => _category = value);
+                              },
+                            );
                           },
                         ),
                         const SizedBox(height: 18),

@@ -6,6 +6,7 @@ import '../widgets/custom_button.dart';
 import '../../core/app_colors.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
+import 'settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -21,10 +22,17 @@ class DashboardScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.white.withOpacity(0.08),
-                child: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white.withOpacity(0.08),
+                  child: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                ),
               ),
               Text(
                 'Budgetrix',

@@ -17,6 +17,14 @@ class LedgerScreen extends ConsumerStatefulWidget {
 
 class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   TransactionFilter _filter = TransactionFilter.all;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +48,8 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
                 ),
           ),
           const SizedBox(height: 24),
+          _buildSearchField(context),
+          const SizedBox(height: 20),
           _buildFilters(context),
           const SizedBox(height: 24),
           state.when(
@@ -86,14 +96,55 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   }
 
   List<TransactionModel> _applyFilter(List<TransactionModel> transactions) {
-    switch (_filter) {
-      case TransactionFilter.income:
-        return transactions.where((t) => t.type == TransactionType.income).toList();
-      case TransactionFilter.expense:
-        return transactions.where((t) => t.type == TransactionType.expense).toList();
-      case TransactionFilter.all:
-        return transactions;
+    List<TransactionModel> filtered = transactions;
+
+    // Type Filter
+    if (_filter == TransactionFilter.income) {
+      filtered = filtered.where((t) => t.type == TransactionType.income).toList();
+    } else if (_filter == TransactionFilter.expense) {
+      filtered = filtered.where((t) => t.type == TransactionType.expense).toList();
     }
+
+    // Search Filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((t) => 
+        t.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        t.category.toLowerCase().contains(_searchQuery.toLowerCase())
+      ).toList();
+    }
+
+    return filtered;
+  }
+
+  Widget _buildSearchField(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() => _searchQuery = value),
+        style: Theme.of(context).textTheme.bodyLarge,
+        decoration: InputDecoration(
+          hintText: 'Search transactions...',
+          hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textMuted),
+          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textMuted),
+          suffixIcon: _searchQuery.isNotEmpty 
+            ? IconButton(
+                icon: const Icon(Icons.close_rounded, size: 20),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+              ) 
+            : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+        ),
+      ),
+    );
   }
 
   Widget _buildFilters(BuildContext context) {
@@ -137,81 +188,107 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
     final amountColor = isIncome ? AppColors.income : AppColors.textPrimary;
     final dateText = DateFormat('dd MMM, hh:mm a').format(transaction.date);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+    return Dismissible(
+      key: Key(transaction.id?.toString() ?? transaction.date.toIso8601String()),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(right: 20),
+        alignment: Alignment.centerRight,
+        decoration: BoxDecoration(
+          color: AppColors.expense.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Icon(Icons.delete_outline_rounded, color: AppColors.expense),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primary.withOpacity(0.1),
+      onDismissed: (_) {
+        if (transaction.id != null) {
+          ref.read(transactionsListProvider.notifier).deleteTransaction(transaction.id!);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('"${transaction.title}" deleted'),
+              backgroundColor: AppColors.bgGradientEnd,
+              behavior: SnackBarBehavior.floating,
             ),
-            child: Icon(
-              isIncome ? Icons.south_west_rounded : Icons.north_east_rounded,
-              color: AppColors.primary,
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withOpacity(0.1),
+              ),
+              child: Icon(
+                isIncome ? Icons.south_west_rounded : Icons.north_east_rounded,
+                color: AppColors.primary,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${transaction.category} • $dateText',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  transaction.title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                  '$amountPrefix₹${transaction.amount.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: amountColor,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
-                const SizedBox(height: 3),
                 Text(
-                  '${transaction.category} • $dateText',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                  transaction.method,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$amountPrefix₹${transaction.amount.toStringAsFixed(0)}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: amountColor,
-                      fontWeight: FontWeight.w700,
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AddExpenseScreen(initialTransaction: transaction),
                     ),
-              ),
-              Text(
-                transaction.method,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
-            onSelected: (value) async {
-              if (value == 'edit') {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => AddExpenseScreen(initialTransaction: transaction),
-                  ),
-                );
-              }
-              if (value == 'delete' && transaction.id != null) {
-                await ref.read(transactionsListProvider.notifier).deleteTransaction(transaction.id!);
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
-            ],
-          ),
-        ],
+                  );
+                }
+                if (value == 'delete' && transaction.id != null) {
+                  await ref.read(transactionsListProvider.notifier).deleteTransaction(transaction.id!);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
