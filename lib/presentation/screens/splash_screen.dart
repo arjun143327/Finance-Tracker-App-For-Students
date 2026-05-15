@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_theme.dart';
 import '../../data/providers/user_provider.dart';
@@ -34,7 +35,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
 
-    Timer(const Duration(milliseconds: 2400), () {
+    Timer(const Duration(milliseconds: 2000), () {
       if (!mounted) return;
 
       final profileState = ref.read(userProfileProvider);
@@ -96,19 +97,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ).createShader(bounds),
                     child: Text(
                       'Budgetrix',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      style: GoogleFonts.cormorantGaramond(
                             fontSize: 70,
-                            fontFamily: 'Playfair Display',
                             fontStyle: FontStyle.italic,
                             letterSpacing: -0.5,
+                            fontWeight: FontWeight.w300,
                           ),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Welcome back',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    'YOUR FINANCIAL JOURNAL',
+                    style: GoogleFonts.dmSans(
                           color: AppColors.textSecondary,
+                          fontSize: 13,
+                          letterSpacing: 0.12,
+                          fontWeight: FontWeight.w300,
                         ),
                   ),
                   const SizedBox(height: 46),
