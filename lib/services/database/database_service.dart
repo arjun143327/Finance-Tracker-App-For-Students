@@ -30,7 +30,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'budgetrix.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -45,7 +45,8 @@ class DatabaseService {
         amount REAL,
         date TEXT,
         method TEXT,
-        type INTEGER
+        type INTEGER,
+        isRecurring INTEGER DEFAULT 0
       )
     ''');
 
@@ -112,6 +113,9 @@ class DatabaseService {
           amount REAL
         )
       ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute("ALTER TABLE transactions ADD COLUMN isRecurring INTEGER DEFAULT 0");
     }
   }
 

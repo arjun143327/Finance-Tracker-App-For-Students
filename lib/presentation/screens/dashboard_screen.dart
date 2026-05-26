@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../widgets/glass_card.dart';
 import '../../core/app_colors.dart';
 import '../../data/models/transaction_model.dart';
+import '../widgets/category_pie_chart.dart';
+import '../widgets/goals_progress_card.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../data/providers/insights_provider.dart';
 import '../../data/providers/user_provider.dart';
@@ -146,12 +148,41 @@ class DashboardScreen extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(height: 50),
           // Smart Insight Card — dynamic from insightsProvider
           if (insights.isNotEmpty) ...[
             _buildInsightCard(context, insights.first),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
           ],
+          
+          txState.maybeWhen(
+            data: (transactions) {
+              final currentMonthTx = transactions.where((t) => t.date.month == DateTime.now().month && t.date.year == DateTime.now().year).toList();
+              final totalIncome = currentMonthTx.where((t) => t.type == TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
+              final totalExpense = currentMonthTx.where((t) => t.type == TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
+
+              return Column(
+                children: [
+                  if (profile?.goal != null) ...[
+                    GoalsProgressCard(
+                      goal: profile!.goal,
+                      totalIncome: totalIncome,
+                      totalExpense: totalExpense,
+                      currency: currency,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  if (currentMonthTx.any((t) => t.type == TransactionType.expense)) ...[
+                    CategoryPieChart(
+                      transactions: currentMonthTx,
+                      currency: currency,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ],
+              );
+            },
+            orElse: () => const SizedBox.shrink(),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

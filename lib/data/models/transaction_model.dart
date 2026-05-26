@@ -8,6 +8,7 @@ class TransactionModel {
   final DateTime date;
   final String method;
   final TransactionType type;
+  final bool isRecurring;
 
   TransactionModel({
     this.id,
@@ -17,6 +18,7 @@ class TransactionModel {
     required this.date,
     required this.method,
     required this.type,
+    this.isRecurring = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +30,7 @@ class TransactionModel {
       'date': date.toIso8601String(),
       'method': method,
       'type': type.index,
+      'isRecurring': isRecurring ? 1 : 0,
     };
   }
 
@@ -40,6 +43,7 @@ class TransactionModel {
       date: DateTime.parse(map['date']),
       method: map['method'],
       type: TransactionType.values[map['type']],
+      isRecurring: map['isRecurring'] == 1,
     );
   }
 }

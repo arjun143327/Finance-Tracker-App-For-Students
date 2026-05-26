@@ -49,6 +49,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   String          _category      = 'Food';
   String          _selectedMethod = 'Cash';
   TransactionType _type          = TransactionType.expense;
+  bool            _isRecurring   = false;
   bool            _isSaving      = false;
   DateTime        _date          = DateTime.now();
 
@@ -61,6 +62,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       _amountController.text = tx.amount.toStringAsFixed(0);
       _category = tx.category;
       _type     = tx.type;
+      _isRecurring = tx.isRecurring;
       // Restore saved method if it matches our list, else fall back to 'Other'
       final found = _kPaymentMethods.any((m) => m.label == tx.method);
       _selectedMethod = found ? tx.method : 'Other';
@@ -88,6 +90,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       date:     _date,
       method:   _selectedMethod,
       type:     _type,
+      isRecurring: _isRecurring,
     );
 
     final notifier = ref.read(transactionsListProvider.notifier);
@@ -319,10 +322,30 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         ),
                         const SizedBox(height: 22),
 
-                        // ── Income / Expense toggle ────────────────────────
                         _TypeToggle(
                           type: _type,
                           onChanged: (t) => setState(() => _type = t),
+                        ),
+                        const SizedBox(height: 22),
+
+                        // ── Recurring toggle ───────────────────────────────
+                        SwitchListTile(
+                          title: Text(
+                            'Recurring Transaction',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          subtitle: Text(
+                            'Automatically add this every month',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                          ),
+                          value: _isRecurring,
+                          activeTrackColor: AppColors.primary,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (val) {
+                            setState(() {
+                              _isRecurring = val;
+                            });
+                          },
                         ),
                       ],
                     ),

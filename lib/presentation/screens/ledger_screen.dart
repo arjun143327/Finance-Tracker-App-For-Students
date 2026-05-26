@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/app_colors.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../data/providers/currency_budget_provider.dart';
 import 'add_expense_screen.dart';
 
 enum TransactionFilter { all, income, expense }
@@ -29,6 +30,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(transactionsListProvider);
+    final currency = ref.watch(currencySymbolProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
@@ -120,7 +122,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
                               child: child,
                             ),
                           ),
-                          child: _buildTransactionTile(context, tx),
+                          child: _buildTransactionTile(context, tx, currency),
                         );
                       }),
                     ],
@@ -221,7 +223,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
     );
   }
 
-  Widget _buildTransactionTile(BuildContext context, TransactionModel transaction) {
+  Widget _buildTransactionTile(BuildContext context, TransactionModel transaction, String currency) {
     final isIncome = transaction.type == TransactionType.income;
     final amountPrefix = isIncome ? '+' : '-';
     final amountColor = isIncome ? AppColors.income : AppColors.textPrimary;
@@ -286,9 +288,17 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    transaction.title,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                  Row(
+                    children: [
+                      Text(
+                        transaction.title,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      if (transaction.isRecurring) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.repeat_rounded, size: 14, color: AppColors.primary),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -302,7 +312,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '$amountPrefix₹${transaction.amount.toStringAsFixed(0)}',
+                  '$amountPrefix$currency${transaction.amount.toStringAsFixed(0)}',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: amountColor,
                         fontWeight: FontWeight.w700,
