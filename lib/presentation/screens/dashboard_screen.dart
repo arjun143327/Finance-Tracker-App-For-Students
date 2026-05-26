@@ -100,6 +100,12 @@ class DashboardScreen extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(width: 6),
+                Tooltip(
+                  message: 'Starting Balance + Income - Expenses',
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: Icon(Icons.info_outline_rounded, size: 14, color: AppColors.textSecondary.withValues(alpha: 0.6)),
+                ),
               ],
             ),
           ),

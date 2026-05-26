@@ -71,22 +71,61 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 );
               }
+              // Group by date string
+              final Map<String, List<TransactionModel>> grouped = {};
+              for (final t in filtered) {
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final yesterday = today.subtract(const Duration(days: 1));
+                final txDate = DateTime(t.date.year, t.date.month, t.date.day);
+                
+                String header;
+                if (txDate == today) {
+                  header = 'Today';
+                } else if (txDate == yesterday) {
+                  header = 'Yesterday';
+                } else {
+                  header = DateFormat('dd MMM, yyyy').format(t.date);
+                }
+                
+                grouped.putIfAbsent(header, () => []).add(t);
+              }
+
+              int tileIndex = 0;
               return Column(
-                children: List.generate(
-                  filtered.length,
-                  (index) => TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: 1),
-                    duration: Duration(milliseconds: 250 + (index * 80)),
-                    builder: (context, value, child) => Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - value) * 16),
-                        child: child,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: grouped.entries.map((entry) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16, bottom: 12),
+                        child: Text(
+                          entry.key,
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: AppColors.textSecondary,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: _buildTransactionTile(context, filtered[index]),
-                  ),
-                ),
+                      ...entry.value.map((tx) {
+                        final idx = tileIndex++;
+                        return TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: Duration(milliseconds: 250 + (idx * 50)),
+                          builder: (context, value, child) => Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, (1 - value) * 16),
+                              child: child,
+                            ),
+                          ),
+                          child: _buildTransactionTile(context, tx),
+                        );
+                      }),
+                    ],
+                  );
+                }).toList(),
               );
             },
           ),
@@ -209,6 +248,13 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
               content: Text('"${transaction.title}" deleted'),
               backgroundColor: AppColors.bgGradientEnd,
               behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'Undo',
+                textColor: AppColors.primary,
+                onPressed: () {
+                  ref.read(transactionsListProvider.notifier).addTransaction(transaction);
+                },
+              ),
             ),
           );
         }

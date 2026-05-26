@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_theme.dart';
+import '../../data/providers/notifications_provider.dart';
 import '../widgets/glass_card.dart';
+import 'about_screen.dart';
 import 'category_management_screen.dart';
+import 'edit_profile_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: AppTheme.backgroundGradient,
       child: Scaffold(
@@ -21,6 +25,18 @@ class SettingsScreen extends StatelessWidget {
         body: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            _buildSettingTile(
+              context,
+              icon: Icons.person_outline_rounded,
+              title: 'Edit Profile',
+              subtitle: 'Update your name, balance, income & goals',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
             _buildSettingTile(
               context,
               icon: Icons.category_rounded,
@@ -39,7 +55,34 @@ class SettingsScreen extends StatelessWidget {
               title: 'Notifications',
               subtitle: 'Manage alerts and reminders',
               onTap: () {
-                // Future feature
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppColors.bgGradientEnd,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    title: const Text('Notifications', style: TextStyle(color: Colors.white)),
+                    content: Consumer(
+                      builder: (context, childRef, _) {
+                        final isEnabled = childRef.watch(dailyReminderProvider);
+                        return SwitchListTile(
+                          title: const Text('Daily spending reminder', style: TextStyle(color: Colors.white)),
+                          subtitle: Text('Remind me at 9 PM every day', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
+                          value: isEnabled,
+                          activeTrackColor: AppColors.primary,
+                          onChanged: (val) {
+                            childRef.read(dailyReminderProvider.notifier).state = val;
+                          },
+                        );
+                      },
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Done', style: TextStyle(color: AppColors.primary)),
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -59,7 +102,9 @@ class SettingsScreen extends StatelessWidget {
               title: 'About Budgetrix',
               subtitle: 'Version 1.1',
               onTap: () {
-                // Future feature
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AboutScreen()),
+                );
               },
             ),
           ],

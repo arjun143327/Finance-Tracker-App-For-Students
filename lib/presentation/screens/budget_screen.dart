@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../core/app_colors.dart';
 import '../../data/providers/budget_provider.dart';
 import '../../data/providers/category_provider.dart';
@@ -125,8 +126,8 @@ class BudgetScreen extends ConsumerWidget {
         children: [
           // --- Header ---
           Text(
-            'Budget',
-            style: Theme.of(context).textTheme.displayLarge,
+            'Budget — ${DateFormat('MMMM yyyy').format(DateTime.now())}',
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 40),
           ),
           const SizedBox(height: 8),
           Text(

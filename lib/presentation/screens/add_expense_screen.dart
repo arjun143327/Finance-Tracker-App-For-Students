@@ -50,6 +50,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   String          _selectedMethod = 'Cash';
   TransactionType _type          = TransactionType.expense;
   bool            _isSaving      = false;
+  DateTime        _date          = DateTime.now();
 
   @override
   void initState() {
@@ -63,6 +64,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       // Restore saved method if it matches our list, else fall back to 'Other'
       final found = _kPaymentMethods.any((m) => m.label == tx.method);
       _selectedMethod = found ? tx.method : 'Other';
+      _date = tx.date;
     }
   }
 
@@ -83,7 +85,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       title:    _titleController.text.trim(),
       category: _category,
       amount:   amount,
-      date:     widget.initialTransaction?.date ?? DateTime.now(),
+      date:     _date,
       method:   _selectedMethod,
       type:     _type,
     );
@@ -233,6 +235,64 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               (value == null || value.trim().isEmpty)
                                   ? 'Title is required'
                                   : null,
+                        ),
+                        const SizedBox(height: 22),
+
+                        // Date picker
+                        Text(
+                          'Date',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(letterSpacing: 1.3),
+                        ),
+                        const SizedBox(height: 12),
+                        InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _date,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: AppColors.primary,
+                                      onPrimary: Colors.white,
+                                      surface: AppColors.bgGradientEnd,
+                                      onSurface: Colors.white,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null) {
+                              setState(() => _date = picked);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.04),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today_rounded, color: AppColors.textSecondary, size: 20),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _date.year == DateTime.now().year && _date.month == DateTime.now().month && _date.day == DateTime.now().day
+                                      ? 'Today'
+                                      : '${_date.day}/${_date.month}/${_date.year}',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 22),
 
