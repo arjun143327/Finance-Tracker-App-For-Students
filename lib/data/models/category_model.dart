@@ -18,7 +18,7 @@ class CategoryModel {
       'id': id,
       'name': name,
       'icon': icon.codePoint.toString(),
-      'color': color.value,
+      'color': color.toARGB32(),
     };
   }
 
@@ -27,7 +27,7 @@ class CategoryModel {
       id: map['id'],
       name: map['name'],
       icon: IconData(int.parse(map['icon'] ?? '0xe148'), fontFamily: 'MaterialIcons'),
-      color: Color(map['color'] ?? Colors.blue.value),
+      color: Color(map['color'] as int? ?? Colors.blue.toARGB32()),
     );
   }
 }

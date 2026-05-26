@@ -165,7 +165,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: title.split('\n')[0] + '\n',
+                            text: '${title.split('\n')[0]}\n',
                             style: GoogleFonts.cormorantGaramond(
                               color: Colors.white,
                               fontSize: 34,
@@ -188,7 +188,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                     const SizedBox(height: 12),
                     Text(
                       subtitle,
-                      style: GoogleFonts.dmSans(
+                      style: GoogleFonts.lato(
                         color: AppColors.textSecondary,
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
@@ -249,14 +249,14 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                         controller: controller,
                         keyboardType: inputType,
                         autofocus: true,
-                        style: GoogleFonts.dmSans(
+                        style: GoogleFonts.lato(
                           fontSize: 32,
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
                           hintText: hint,
-                          hintStyle: GoogleFonts.dmSans(
+                          hintStyle: GoogleFonts.lato(
                             color: AppColors.textSecondary.withValues(alpha: 0.3),
                             fontSize: 32,
                             fontWeight: FontWeight.w500,
@@ -359,7 +359,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                             const SizedBox(width: 16),
                             Text(
                               goal,
-                              style: GoogleFonts.dmSans(
+                              style: GoogleFonts.lato(
                                 color: _goal == goal ? AppColors.primaryLight : AppColors.textPrimary,
                                 fontWeight: _goal == goal ? FontWeight.w500 : FontWeight.w300,
                                 fontSize: 15,
@@ -511,7 +511,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
               ),
               child: Text(
                 '${c.symbol} ${c.label}',
-                style: GoogleFonts.dmSans(
+                style: GoogleFonts.lato(
                   color: isSelected ? AppColors.primaryLight : AppColors.textSecondary,
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w500 : FontWeight.w300,
@@ -535,7 +535,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
           children: [
             Text(
               "INSIGHT",
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.lato(
                 color: AppColors.textMuted,
                 fontSize: 10,
                 letterSpacing: 0.1,
@@ -599,7 +599,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
           child: Center(
             child: Text(
               label,
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.lato(
                 color: AppColors.bgGradientStart,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -612,4 +612,5 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
     );
   }
 }
+
 

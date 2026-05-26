@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile_model.dart';
 import 'transaction_provider.dart';
+import '../../services/database/database_service.dart';
 
 final userProfileProvider = StateNotifierProvider<UserProfileNotifier, AsyncValue<UserProfileModel?>>((ref) {
   final dbService = ref.watch(databaseServiceProvider);
@@ -8,7 +9,7 @@ final userProfileProvider = StateNotifierProvider<UserProfileNotifier, AsyncValu
 });
 
 class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfileModel?>> {
-  final _dbService;
+  final DatabaseService _dbService;
 
   UserProfileNotifier(this._dbService) : super(const AsyncValue.loading()) {
     loadProfile();

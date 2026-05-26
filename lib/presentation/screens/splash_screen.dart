@@ -21,6 +21,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
 
+  // Guards so navigation only fires once
+  bool _navigated = false;
+  Timer? _minSplashTimer;
+  bool _minTimeElapsed = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,32 +40,54 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
 
-    Timer(const Duration(milliseconds: 2000), () {
-      if (!mounted) return;
-
-      final profileState = ref.read(userProfileProvider);
-      final isComplete = profileState.valueOrNull?.onboardingComplete ?? false;
-
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 450),
-          pageBuilder: (_, animation, __) => FadeTransition(
-            opacity: animation,
-            child: isComplete ? const AppShell() : const WelcomeScreen(),
-          ),
-        ),
-      );
+    // Minimum splash display time (2 s)
+    _minSplashTimer = Timer(const Duration(milliseconds: 2000), () {
+      _minTimeElapsed = true;
+      _tryNavigate();
     });
+  }
+
+  // Called both when the min-timer fires AND when the profile provider settles
+  void _tryNavigate() {
+    if (_navigated || !mounted) return;
+    if (!_minTimeElapsed) return; // still in min-splash window
+
+    final profileState = ref.read(userProfileProvider);
+
+    // Only navigate once the AsyncValue is no longer loading
+    if (profileState.isLoading) return;
+
+    _navigated = true;
+
+    final isComplete = profileState.valueOrNull?.onboardingComplete ?? false;
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 450),
+        pageBuilder: (_, animation, __) => FadeTransition(
+          opacity: animation,
+          child: isComplete ? const AppShell() : const WelcomeScreen(),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _minSplashTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen to profile state changes — triggers _tryNavigate when DB load finishes
+    ref.listen(userProfileProvider, (_, next) {
+      if (!next.isLoading) {
+        _tryNavigate();
+      }
+    });
+
     return Container(
       decoration: AppTheme.backgroundGradient,
       child: Scaffold(
@@ -100,22 +127,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Text(
                       'Budgetrix',
                       style: GoogleFonts.cormorantGaramond(
-                            fontSize: 70,
-                            fontStyle: FontStyle.italic,
-                            letterSpacing: -0.5,
-                            fontWeight: FontWeight.w300,
-                          ),
+                        fontSize: 70,
+                        fontStyle: FontStyle.italic,
+                        letterSpacing: -0.5,
+                        fontWeight: FontWeight.w300,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'YOUR FINANCIAL JOURNAL',
-                    style: GoogleFonts.dmSans(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          letterSpacing: 0.12,
-                          fontWeight: FontWeight.w300,
-                        ),
+                    style: GoogleFonts.lato(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      letterSpacing: 0.12,
+                      fontWeight: FontWeight.w300,
+                    ),
                   ),
                   const SizedBox(height: 46),
                   SizedBox(
@@ -147,4 +174,3 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 }
-

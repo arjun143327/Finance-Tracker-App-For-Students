@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:ui';
+import 'dart:math' as math;
 import '../../core/app_colors.dart';
 import '../widgets/glass_card.dart';
 import '../../data/providers/insights_provider.dart';
+import '../../data/providers/currency_budget_provider.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -11,12 +12,15 @@ class InsightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final insights = ref.watch(insightsProvider);
+    final dailyData = ref.watch(dailySpendingProvider);
+    final currency = ref.watch(currencySymbolProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ─── Header ───────────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -31,21 +35,28 @@ class InsightsScreen extends ConsumerWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: Colors.white.withValues(alpha: 0.08),
-                child: const Icon(Icons.person_outline, color: AppColors.textSecondary, size: 18),
+                child: const Icon(Icons.person_outline,
+                    color: AppColors.textSecondary, size: 18),
               ),
             ],
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
+
+          // ─── Dynamic Spending Chart ────────────────────────────────
+          _SpendingChartCard(dailyData: dailyData, currency: currency),
+          const SizedBox(height: 20),
+
+          // ─── Insight bullets ──────────────────────────────────────
           if (insights.isEmpty)
             Center(
               child: Padding(
-                padding: const EdgeInsets.only(top: 40),
+                padding: const EdgeInsets.only(top: 24),
                 child: Text(
                   'Not enough data for insights yet.\nKeep logging your expenses!',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                        color: AppColors.textSecondary,
+                      ),
                 ),
               ),
             )
@@ -60,57 +71,57 @@ class InsightsScreen extends ConsumerWidget {
                       Text(
                         'Weekly Summary',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.primary,
-                        ),
+                              color: AppColors.primary,
+                            ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '7 DAY',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(fontSize: 10),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  ...insights.map((insight) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildInsightBullet(context, insight.message, insight.isPositive),
-                      )),
-                  const SizedBox(height: 20),
-                  // Placeholder for Chart
-                  SizedBox(
-                    height: 100,
-                    width: double.infinity,
-                    child: CustomPaint(
-                      painter: SimpleLineChartPainter(),
+                  ...insights.map(
+                    (insight) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildInsightBullet(
+                          context, insight.message, insight.isPositive),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            // Example of mapping insights to detailed cards if needed,
-            // but the PRD focuses on simple text insights. We'll map the first insight as a highlighted card.
             if (insights.isNotEmpty)
-              _buildCategoryInsight(
+              _buildHighlightCard(
                 context,
                 insights.first.title,
                 insights.first.message,
-                insights.first.isPositive ? Icons.trending_down_rounded : Icons.trending_up_rounded,
+                insights.first.isPositive
+                    ? Icons.trending_down_rounded
+                    : Icons.trending_up_rounded,
                 isPositive: insights.first.isPositive,
               ),
           ],
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _buildInsightBullet(BuildContext context, String text, bool isPositive) {
+  Widget _buildInsightBullet(
+      BuildContext context, String text, bool isPositive) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -128,16 +139,17 @@ class InsightsScreen extends ConsumerWidget {
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textPrimary,
-              height: 1.4,
-            ),
+                  color: AppColors.textPrimary,
+                  height: 1.4,
+                ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildCategoryInsight(BuildContext context, String title, String subtitle, IconData icon, {required bool isPositive}) {
+  Widget _buildHighlightCard(BuildContext context, String title, String subtitle,
+      IconData icon, {required bool isPositive}) {
     return GlassCard(
       padding: const EdgeInsets.all(24),
       child: Row(
@@ -146,16 +158,13 @@ class InsightsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 12),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isPositive ? AppColors.income : AppColors.expense,
-                  ),
+                        color: isPositive ? AppColors.income : AppColors.expense,
+                      ),
                 ),
               ],
             ),
@@ -174,65 +183,364 @@ class InsightsScreen extends ConsumerWidget {
   }
 }
 
-class SimpleLineChartPainter extends CustomPainter {
+// ─────────────────────────────────────────────────────────────────────────────
+// Spending Chart Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SpendingChartCard extends StatelessWidget {
+  final List<DailySpend> dailyData;
+  final String currency;
+
+  const _SpendingChartCard({required this.dailyData, required this.currency});
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.primary
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+  Widget build(BuildContext context) {
+    final hasData = dailyData.any((d) => d.amount > 0);
 
-    final path = Path();
-    path.moveTo(0, size.height * 0.8);
-    path.quadraticBezierTo(
-      size.width * 0.4,
-      size.height * 0.2,
-      size.width,
-      size.height * 0.3,
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Card header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '30-Day Spending',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    hasData
+                        ? 'Daily expense trend'
+                        : 'No expenses logged yet',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                  ),
+                ],
+              ),
+              if (hasData)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'TODAY',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Chart
+          if (!hasData)
+            Container(
+              height: 120,
+              alignment: Alignment.center,
+              child: Text(
+                'Start logging expenses to see your spending chart.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+              ),
+            )
+          else
+            SizedBox(
+              height: 140,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: DailySpendingChartPainter(data: dailyData),
+              ),
+            ),
+
+          if (hasData) ...[
+            const SizedBox(height: 16),
+            // Day labels strip
+            _DayLabelsRow(dailyData: dailyData),
+            const SizedBox(height: 16),
+            // Stats row
+            _StatsRow(dailyData: dailyData, currency: currency),
+          ],
+        ],
+      ),
     );
+  }
+}
 
-    canvas.drawPath(path, paint);
+// ─────────────────────────────────────────────────────────────────────────────
+// Day labels (shows day-of-month for every 5th day)
+// ─────────────────────────────────────────────────────────────────────────────
 
-    // Draw the dot at the end
-    final dotPaint = Paint()..color = AppColors.primary;
-    canvas.drawCircle(Offset(size.width, size.height * 0.3), 5, dotPaint);
+class _DayLabelsRow extends StatelessWidget {
+  final List<DailySpend> dailyData;
+  const _DayLabelsRow({required this.dailyData});
 
-    // Draw dashed secondary line
-    final dashPaint = Paint()
-      ..color = AppColors.textMuted.withValues(alpha: 0.3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final dashPath = Path();
-    dashPath.moveTo(0, size.height * 0.3);
-    dashPath.quadraticBezierTo(
-      size.width * 0.5,
-      size.height * 0.6,
-      size.width,
-      size.height * 0.9,
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(dailyData.length, (i) {
+        final d = dailyData[i];
+        final showLabel = i == 0 ||
+            i == dailyData.length - 1 ||
+            i % 6 == 0;
+        return Expanded(
+          child: Text(
+            showLabel ? '${d.day}' : '',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: d.isToday ? AppColors.primary : AppColors.textMuted,
+                  fontSize: 9,
+                  fontWeight: d.isToday ? FontWeight.w700 : FontWeight.w300,
+                ),
+          ),
+        );
+      }),
     );
+  }
+}
 
-    _drawDashedPath(canvas, dashPath, dashPaint);
+// ─────────────────────────────────────────────────────────────────────────────
+// Stats strip — peak, avg, total
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StatsRow extends StatelessWidget {
+  final List<DailySpend> dailyData;
+  final String currency;
+  const _StatsRow({required this.dailyData, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    final activeDays = dailyData.where((d) => d.amount > 0).toList();
+    final total = activeDays.fold(0.0, (s, d) => s + d.amount);
+    final peak = activeDays.isEmpty
+        ? 0.0
+        : activeDays.map((d) => d.amount).reduce(math.max);
+    final avg = activeDays.isEmpty ? 0.0 : total / activeDays.length;
+
+    return Row(
+      children: [
+        _stat(context, 'TOTAL', '$currency${total.toStringAsFixed(0)}'),
+        _stat(context, 'PEAK', '$currency${peak.toStringAsFixed(0)}'),
+        _stat(context, 'AVG/DAY', '$currency${avg.toStringAsFixed(0)}'),
+      ],
+    );
   }
 
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    const dashWidth = 5.0;
-    const dashSpace = 5.0;
-    double distance = 0.0;
-    for (final PathMetric metric in path.computeMetrics()) {
-      while (distance < metric.length) {
-        canvas.drawPath(
-          metric.extractPath(distance, distance + dashWidth),
-          paint,
-        );
-        distance += dashWidth + dashSpace;
+  Widget _stat(BuildContext context, String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
+                  fontSize: 9,
+                  letterSpacing: 1,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom Chart Painter — smooth Catmull-Rom spline with gradient fill
+// ─────────────────────────────────────────────────────────────────────────────
+
+class DailySpendingChartPainter extends CustomPainter {
+  final List<DailySpend> data;
+
+  DailySpendingChartPainter({required this.data});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final maxVal = data.map((d) => d.amount).reduce(math.max);
+    if (maxVal <= 0) return;
+
+    final points = _buildPoints(size, maxVal);
+    if (points.length < 2) return;
+
+    final linePath = _buildSmoothPath(points);
+
+    // ── Gradient fill under curve ──────────────────────────────
+    final fillPath = Path.from(linePath)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          AppColors.primary.withValues(alpha: 0.28),
+          AppColors.primary.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(fillPath, fillPaint);
+
+    // ── Baseline grid lines ────────────────────────────────────
+    final gridPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..strokeWidth = 0.8;
+
+    for (int i = 1; i <= 3; i++) {
+      final y = size.height * (1 - i / 4);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // ── Main line ─────────────────────────────────────────────
+    final linePaint = Paint()
+      ..color = AppColors.primary
+      ..strokeWidth = 2.4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(linePath, linePaint);
+
+    // ── Dot at each non-zero day ───────────────────────────────
+    final dotPaint = Paint()..color = AppColors.primary.withValues(alpha: 0.5);
+    final todayDotPaint = Paint()..color = AppColors.primary;
+    final todayRingPaint = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    final whiteCenter = Paint()..color = AppColors.bgGradientStart;
+
+    for (int i = 0; i < points.length; i++) {
+      final d = data[i];
+      if (d.amount <= 0) continue;
+
+      final pt = points[i];
+
+      if (d.isToday) {
+        // Pulsing ring effect
+        canvas.drawCircle(pt, 10, todayRingPaint);
+        canvas.drawCircle(pt, 5.5, todayDotPaint);
+        canvas.drawCircle(pt, 2.5, whiteCenter);
+      } else if (d.amount == maxVal) {
+        // Peak dot — slightly larger
+        canvas.drawCircle(pt, 4, Paint()..color = AppColors.primaryLight);
+        canvas.drawCircle(pt, 2, whiteCenter);
+      } else {
+        canvas.drawCircle(pt, 2.2, dotPaint);
       }
+    }
+
+    // ── Peak value label ──────────────────────────────────────
+    final peakIdx =
+        data.indexWhere((d) => d.amount == maxVal && d.amount > 0);
+    if (peakIdx >= 0) {
+      final peakPt = points[peakIdx];
+      final labelY = (peakPt.dy - 14).clamp(0.0, size.height - 14);
+      _drawLabel(
+        canvas,
+        data[peakIdx].amount.toStringAsFixed(0),
+        Offset(peakPt.dx, labelY),
+        AppColors.primaryLight,
+      );
     }
   }
 
+  // Catmull-Rom → cubic Bezier smooth path
+  Path _buildSmoothPath(List<Offset> points) {
+    final path = Path();
+    if (points.isEmpty) return path;
+    path.moveTo(points[0].dx, points[0].dy);
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = i > 0 ? points[i - 1] : points[i];
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      final p3 = i + 2 < points.length ? points[i + 2] : p2;
+
+      final cp1 = Offset(
+        p1.dx + (p2.dx - p0.dx) / 6,
+        p1.dy + (p2.dy - p0.dy) / 6,
+      );
+      final cp2 = Offset(
+        p2.dx - (p3.dx - p1.dx) / 6,
+        p2.dy - (p3.dy - p1.dy) / 6,
+      );
+      path.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, p2.dx, p2.dy);
+    }
+    return path;
+  }
+
+  List<Offset> _buildPoints(Size size, double maxVal) {
+    final w = size.width;
+    final h = size.height;
+    final step = w / (data.length - 1);
+
+    return List.generate(data.length, (i) {
+      final x = i * step;
+      // clamp to 95% height so dots don't clip at bottom
+      final y = h - (data[i].amount / maxVal) * h * 0.88;
+      return Offset(x, y);
+    });
+  }
+
+  void _drawLabel(Canvas canvas, String text, Offset offset, Color color) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    textPainter.paint(
+      canvas,
+      Offset(offset.dx - textPainter.width / 2, offset.dy),
+    );
+  }
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(DailySpendingChartPainter old) => old.data != data;
 }
-
-

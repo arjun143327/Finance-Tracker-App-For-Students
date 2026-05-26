@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/category_model.dart';
 import 'transaction_provider.dart';
+import '../../services/database/database_service.dart';
 
 final categoryListProvider = StateNotifierProvider<CategoryNotifier, AsyncValue<List<CategoryModel>>>((ref) {
   final dbService = ref.watch(databaseServiceProvider);
@@ -8,7 +9,7 @@ final categoryListProvider = StateNotifierProvider<CategoryNotifier, AsyncValue<
 });
 
 class CategoryNotifier extends StateNotifier<AsyncValue<List<CategoryModel>>> {
-  final _dbService;
+  final DatabaseService _dbService;
 
   CategoryNotifier(this._dbService) : super(const AsyncValue.loading()) {
     loadCategories();

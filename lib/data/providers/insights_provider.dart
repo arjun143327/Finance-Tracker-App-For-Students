@@ -219,3 +219,49 @@ final insightsProvider = Provider<List<InsightMessage>>((ref) {
     orElse: () => [],
   );
 });
+
+// ---------------------------------------------------------------------------
+// DailySpend — one data point per day for the chart
+// ---------------------------------------------------------------------------
+class DailySpend {
+  final int day;       // day-of-month
+  final double amount; // total expense for that day
+  final bool isToday;
+
+  const DailySpend({
+    required this.day,
+    required this.amount,
+    required this.isToday,
+  });
+}
+
+// Returns the last 30 calendar days with daily expense sums.
+final dailySpendingProvider = Provider<List<DailySpend>>((ref) {
+  final txState = ref.watch(transactionsListProvider);
+
+  return txState.maybeWhen(
+    data: (transactions) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      return List.generate(30, (i) {
+        // i=0 → 29 days ago, i=29 → today
+        final date = today.subtract(Duration(days: 29 - i));
+        final dayExpenses = transactions.where((t) {
+          final txDay = DateTime(t.date.year, t.date.month, t.date.day);
+          return txDay == date && t.type == TransactionType.expense;
+        });
+        final total = dayExpenses.fold(0.0, (s, t) => s + t.amount);
+        return DailySpend(
+          day: date.day,
+          amount: total,
+          isToday: date == today,
+        );
+      });
+    },
+    orElse: () => List.generate(
+      30,
+      (i) => DailySpend(day: i + 1, amount: 0, isToday: false),
+    ),
+  );
+});

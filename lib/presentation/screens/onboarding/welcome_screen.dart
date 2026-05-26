@@ -67,7 +67,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   'A calmer way to understand your money. No noise, no overwhelm — just clarity.',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.lato(
                         color: AppColors.textSecondary,
                         fontSize: 16,
                         height: 1.5,
@@ -111,7 +111,7 @@ class WelcomeScreen extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      textStyle: GoogleFonts.dmSans(
+                      textStyle: GoogleFonts.lato(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 1.2,
@@ -191,4 +191,5 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 }
+
 

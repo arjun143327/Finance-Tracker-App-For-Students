@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'transaction_provider.dart';
 import 'user_provider.dart';
+import '../../services/database/database_service.dart';
 
 // --- Currency Provider ---
 // Reads currency from the loaded user profile. Falls back to '₹'.
@@ -18,7 +19,7 @@ final categoryBudgetsProvider =
 });
 
 class CategoryBudgetNotifier extends StateNotifier<Map<String, double>> {
-  final _dbService;
+  final DatabaseService _dbService;
 
   CategoryBudgetNotifier(this._dbService) : super({}) {
     _load();

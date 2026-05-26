@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'transaction_provider.dart';
 import '../models/transaction_model.dart';
+import '../../services/database/database_service.dart';
 
 final monthlyBudgetProvider = StateNotifierProvider<BudgetNotifier, double>((ref) {
   final dbService = ref.watch(databaseServiceProvider);
@@ -9,7 +10,7 @@ final monthlyBudgetProvider = StateNotifierProvider<BudgetNotifier, double>((ref
 });
 
 class BudgetNotifier extends StateNotifier<double> {
-  final _dbService;
+  final DatabaseService _dbService;
 
   BudgetNotifier(this._dbService) : super(0.0) {
     loadBudget();

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_colors.dart';
 import '../../data/providers/budget_provider.dart';
+import '../../data/providers/category_provider.dart';
 import '../../data/providers/currency_budget_provider.dart';
 import '../widgets/glass_card.dart';
 
@@ -39,7 +40,7 @@ class BudgetScreen extends ConsumerWidget {
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          style: GoogleFonts.dmSans(color: AppColors.textPrimary, fontSize: 22),
+          style: GoogleFonts.lato(color: AppColors.textPrimary, fontSize: 22),
           decoration: InputDecoration(
             hintText: '0',
             prefixText: '$currency ',
@@ -47,7 +48,7 @@ class BudgetScreen extends ConsumerWidget {
               color: AppColors.primary,
               fontSize: 22,
             ),
-            hintStyle: GoogleFonts.dmSans(
+            hintStyle: GoogleFonts.lato(
               color: AppColors.textSecondary.withValues(alpha: 0.4),
             ),
             enabledBorder: const UnderlineInputBorder(
@@ -63,7 +64,7 @@ class BudgetScreen extends ConsumerWidget {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Cancel',
-              style: GoogleFonts.dmSans(color: AppColors.textMuted),
+              style: GoogleFonts.lato(color: AppColors.textMuted),
             ),
           ),
           TextButton(
@@ -75,7 +76,7 @@ class BudgetScreen extends ConsumerWidget {
             },
             child: Text(
               'Save',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.lato(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w600,
               ),
@@ -92,16 +93,24 @@ class BudgetScreen extends ConsumerWidget {
     final transactions = ref.watch(currentMonthTransactionsProvider);
     final categoryBudgets = ref.watch(categoryBudgetsProvider);
     final currency = ref.watch(currencySymbolProvider);
+    final categoriesState = ref.watch(categoryListProvider);
 
-    // Group spending by category
+    // Group current month spending by category
     final categorySpending = <String, double>{};
     for (final tx in transactions) {
       categorySpending[tx.category] =
           (categorySpending[tx.category] ?? 0) + tx.amount;
     }
 
-    // Merge: show all categories that have spending OR a budget set
+    // All user-defined categories (master list) — always shown regardless of spending
+    final definedCategories = categoriesState.maybeWhen(
+      data: (cats) => cats.map((c) => c.name).toSet(),
+      orElse: () => <String>{},
+    );
+
+    // Merge: defined categories + any with spending + any with a saved budget
     final allCategories = {
+      ...definedCategories,
       ...categorySpending.keys,
       ...categoryBudgets.keys,
     }.toList()
@@ -122,7 +131,7 @@ class BudgetScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             'Set limits per category and track your spending.',
-            style: GoogleFonts.dmSans(
+            style: GoogleFonts.lato(
               color: AppColors.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.w300,
@@ -150,7 +159,7 @@ class BudgetScreen extends ConsumerWidget {
               ),
               Text(
                 'Tap to set limit',
-                style: GoogleFonts.dmSans(
+                style: GoogleFonts.lato(
                   color: AppColors.textMuted,
                   fontSize: 11,
                   fontWeight: FontWeight.w300,
@@ -169,8 +178,8 @@ class BudgetScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.tune_rounded, color: AppColors.primary, size: 36),
                     const SizedBox(height: 12),
-                    Text(
-                      'No spending yet this month',
+                     Text(
+                      'No categories found.',
                       style: GoogleFonts.cormorantGaramond(
                         color: AppColors.textSecondary,
                         fontSize: 18,
@@ -179,8 +188,8 @@ class BudgetScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Add expenses to track your categories here.',
-                      style: GoogleFonts.dmSans(
+                      'Go to Settings → Manage Categories to add some.',
+                      style: GoogleFonts.lato(
                         color: AppColors.textMuted,
                         fontSize: 12,
                         fontWeight: FontWeight.w300,
@@ -277,7 +286,7 @@ class _BudgetOverviewCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               '$currency${totalSpent.toStringAsFixed(0)} / $currency${totalBudgeted.toStringAsFixed(0)} used',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.lato(
                 color: isOverLimit ? AppColors.expense : AppColors.textPrimary,
                 fontSize: 15,
                 fontWeight: isOverLimit ? FontWeight.w600 : FontWeight.w300,
@@ -298,7 +307,7 @@ class _BudgetOverviewCard extends StatelessWidget {
               isOverLimit
                   ? 'Over budget by $currency${(totalSpent - totalBudgeted).toStringAsFixed(0)}'
                   : 'Remaining: $currency${(totalBudgeted - totalSpent).clamp(0, double.infinity).toStringAsFixed(0)}',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.lato(
                 color: isOverLimit ? AppColors.expense : AppColors.primaryLight,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -369,14 +378,14 @@ class _CategoryBudgetTile extends StatelessWidget {
                   children: [
                     Text(
                       statusLabel,
-                      style: GoogleFonts.dmSans(
+                      style: GoogleFonts.lato(
                         color: statusColor,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(
+                    const Icon(
                       Icons.edit_outlined,
                       color: AppColors.textMuted,
                       size: 14,
@@ -390,7 +399,7 @@ class _CategoryBudgetTile extends StatelessWidget {
               hasLimit
                   ? '$currency${spent.toStringAsFixed(0)} of $currency${limit.toStringAsFixed(0)}'
                   : '$currency${spent.toStringAsFixed(0)} spent — tap to set a limit',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.lato(
                 color: AppColors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w300,
@@ -416,4 +425,5 @@ class _CategoryBudgetTile extends StatelessWidget {
     );
   }
 }
+
 

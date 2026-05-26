@@ -25,8 +25,11 @@ class DashboardScreen extends ConsumerWidget {
 
     final hour = DateTime.now().hour;
     String greeting = 'Good Evening';
-    if (hour < 12) greeting = 'Good Morning';
-    else if (hour < 17) greeting = 'Good Afternoon';
+    if (hour < 12) {
+      greeting = 'Good Morning';
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
