@@ -61,3 +61,4 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<TransactionModel
     }
   }
 }
+

@@ -63,7 +63,7 @@ class _GlassCardState extends State<GlassCard> {
           boxShadow: widget.interactive && _hovered
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.16),
+                    color: AppColors.primary.withValues(alpha: 0.16),
                     blurRadius: 26,
                     spreadRadius: 1,
                   ),
@@ -92,3 +92,4 @@ class _GlassCardState extends State<GlassCard> {
     );
   }
 }
+

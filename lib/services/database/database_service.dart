@@ -30,8 +30,9 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'budgetrix.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -65,6 +66,13 @@ class DatabaseService {
     ''');
 
     await db.execute('''
+      CREATE TABLE category_budgets(
+        category TEXT PRIMARY KEY,
+        amount REAL
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE user_profile(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -72,7 +80,8 @@ class DatabaseService {
         income REAL,
         budget REAL,
         goal TEXT,
-        onboarding_complete INTEGER
+        onboarding_complete INTEGER,
+        currency TEXT DEFAULT '₹'
       )
     ''');
 
@@ -89,6 +98,20 @@ class DatabaseService {
 
     for (final cat in defaults) {
       await db.insert('categories', cat.toMap());
+    }
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add currency column to existing user_profile tables
+      await db.execute("ALTER TABLE user_profile ADD COLUMN currency TEXT DEFAULT '₹'");
+      // Add category_budgets table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS category_budgets(
+          category TEXT PRIMARY KEY,
+          amount REAL
+        )
+      ''');
     }
   }
 
@@ -143,6 +166,25 @@ class DatabaseService {
     await db.insert(
       'budgets',
       {'month': month, 'amount': amount},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // --- Category Budget Methods ---
+
+  Future<Map<String, double>> getCategoryBudgets() async {
+    if (kIsWeb) return {};
+    Database db = await database;
+    final maps = await db.query('category_budgets');
+    return {for (var m in maps) m['category'] as String: (m['amount'] as num).toDouble()};
+  }
+
+  Future<void> saveCategoryBudget(String category, double amount) async {
+    if (kIsWeb) return;
+    Database db = await database;
+    await db.insert(
+      'category_budgets',
+      {'category': category, 'amount': amount},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -226,3 +268,4 @@ class DatabaseService {
     }
   }
 }
+

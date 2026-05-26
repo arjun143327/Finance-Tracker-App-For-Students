@@ -119,9 +119,9 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   Widget _buildSearchField(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: TextField(
         controller: _searchController,
@@ -166,10 +166,10 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.16) : Colors.transparent,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.16) : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.white.withOpacity(0.1),
+            color: isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.1),
           ),
         ),
         child: Text(
@@ -196,7 +196,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
         padding: const EdgeInsets.only(right: 20),
         alignment: Alignment.centerRight,
         decoration: BoxDecoration(
-          color: AppColors.expense.withOpacity(0.2),
+          color: AppColors.expense.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(18),
         ),
         child: const Icon(Icons.delete_outline_rounded, color: AppColors.expense),
@@ -217,9 +217,9 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Row(
           children: [
@@ -228,7 +228,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
               height: 42,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
               ),
               child: Icon(
                 isIncome ? Icons.south_west_rounded : Icons.north_east_rounded,
@@ -293,3 +293,4 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
     );
   }
 }
+

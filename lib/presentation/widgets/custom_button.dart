@@ -26,7 +26,6 @@ class CustomButton extends StatelessWidget {
           backgroundColor: color ?? AppColors.primary,
           foregroundColor: AppColors.bgGradientStart,
           elevation: 0,
-          shadowColor: AppColors.primary.withOpacity(0.16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -36,12 +35,17 @@ class CustomButton extends StatelessWidget {
             letterSpacing: 1.1,
           ),
         ).copyWith(
-          overlayColor: MaterialStatePropertyAll(AppColors.primaryLight.withOpacity(0.06)),
-          shadowColor: MaterialStatePropertyAll(AppColors.primary.withOpacity(0.14)),
-          elevation: const MaterialStatePropertyAll(0),
+          overlayColor: WidgetStatePropertyAll(
+            AppColors.primaryLight.withValues(alpha: 0.06),
+          ),
+          shadowColor: WidgetStatePropertyAll(
+            AppColors.primary.withValues(alpha: 0.14),
+          ),
+          elevation: const WidgetStatePropertyAll(0),
         ),
         child: Text(label.toUpperCase()),
       ),
     );
   }
 }
+

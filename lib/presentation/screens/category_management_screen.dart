@@ -58,12 +58,12 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'New category name',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
+                        fillColor: Colors.white.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                       ),
                     ),
@@ -99,7 +99,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                           leading: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: cat.color.withOpacity(0.1),
+                              color: cat.color.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(cat.icon, color: cat.color),
@@ -129,3 +129,4 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     );
   }
 }
+

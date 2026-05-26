@@ -86,7 +86,7 @@ class SettingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: AppColors.primary),
@@ -108,7 +108,7 @@ class SettingsScreen extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -117,7 +117,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -126,3 +126,4 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
+

@@ -25,8 +25,10 @@ class WelcomeScreen extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.05),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    color: Colors.white.withValues(alpha: 0.05),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: const Icon(
                     Icons.menu_book_rounded,
@@ -159,8 +161,8 @@ class WelcomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.12)),
-            color: AppColors.primary.withOpacity(0.05),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+            color: AppColors.primary.withValues(alpha: 0.05),
           ),
           child: Column(
             children: [
@@ -189,3 +191,4 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 }
+

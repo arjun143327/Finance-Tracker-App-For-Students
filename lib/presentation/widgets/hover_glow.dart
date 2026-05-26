@@ -43,7 +43,7 @@ class _HoverGlowState extends State<HoverGlow> {
               boxShadow: _hovered
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.20),
+                        color: AppColors.primary.withValues(alpha: 0.20),
                         blurRadius: 24,
                         spreadRadius: 1,
                       ),
@@ -57,3 +57,4 @@ class _HoverGlowState extends State<HoverGlow> {
     );
   }
 }
+

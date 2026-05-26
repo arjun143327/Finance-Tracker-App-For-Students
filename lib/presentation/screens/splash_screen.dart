@@ -78,8 +78,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     height: 78,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.08),
-                      border: Border.all(color: Colors.white.withOpacity(0.12)),
+                      color: Colors.white.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
                     ),
                     child: const Icon(
                       Icons.menu_book_rounded,
@@ -127,7 +129,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           child: LinearProgressIndicator(
                             value: value,
                             minHeight: 4,
-                            backgroundColor: Colors.white.withOpacity(0.1),
+                            backgroundColor: Colors.white.withValues(alpha: 0.1),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               AppColors.primary,
                             ),
@@ -145,3 +147,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 }
+

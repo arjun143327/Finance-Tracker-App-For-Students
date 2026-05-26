@@ -123,7 +123,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                   color: AppColors.primary,
                                   shadows: [
                                     Shadow(
-                                      color: AppColors.primary.withOpacity(0.24),
+                                      color: AppColors.primary.withValues(alpha: 0.24),
                                       blurRadius: 22,
                                       offset: const Offset(-4, -6),
                                     ),
@@ -191,12 +191,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.resolveWith(
                               (states) => states.contains(MaterialState.selected)
-                                  ? AppColors.primary.withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.02),
+                                  ? AppColors.primary.withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.02),
                             ),
                             foregroundColor: const MaterialStatePropertyAll(AppColors.textPrimary),
                             side: MaterialStatePropertyAll(
-                              BorderSide(color: Colors.white.withOpacity(0.1)),
+                              BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                             ),
                           ),
                           segments: const [
@@ -224,7 +224,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.16),
+                        color: AppColors.primary.withValues(alpha: 0.16),
                         blurRadius: 22,
                         offset: const Offset(-4, -5),
                       ),
@@ -247,14 +247,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     return InputDecoration(
       hintText: hint,
       filled: true,
-      fillColor: Colors.white.withOpacity(0.04),
+      fillColor: Colors.white.withValues(alpha: 0.04),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -263,3 +263,4 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     );
   }
 }
+

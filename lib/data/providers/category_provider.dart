@@ -42,3 +42,4 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<CategoryModel>>> {
     }
   }
 }
+

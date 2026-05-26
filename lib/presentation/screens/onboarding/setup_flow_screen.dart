@@ -58,6 +58,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
       budget: 0.0, // Budget setup deferred to Phase 3 (Settings screen)
       goal: _goal,
       onboardingComplete: true,
+      currency: _selectedCurrency,
     );
 
     await ref.read(userProfileProvider.notifier).saveProfile(profile);
@@ -221,7 +222,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                               decoration: InputDecoration(
                                 hintText: hint,
                                 hintStyle: GoogleFonts.cormorantGaramond(
-                                  color: AppColors.textSecondary.withOpacity(0.2),
+                                  color: AppColors.textSecondary.withValues(alpha: 0.2),
                                   fontSize: 48,
                                   fontWeight: FontWeight.w300,
                                 ),
@@ -237,7 +238,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                       ),
                       Container(
                         height: 1,
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                       ),
                       const SizedBox(height: 24),
                       _buildCurrencySelector(),
@@ -256,12 +257,12 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                         decoration: InputDecoration(
                           hintText: hint,
                           hintStyle: GoogleFonts.dmSans(
-                            color: AppColors.textSecondary.withOpacity(0.3),
+                            color: AppColors.textSecondary.withValues(alpha: 0.3),
                             fontSize: 32,
                             fontWeight: FontWeight.w500,
                           ),
                           enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.08), width: 1),
+                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1),
                           ),
                           focusedBorder: const UnderlineInputBorder(
                             borderSide: BorderSide(color: AppColors.primary, width: 2),
@@ -337,13 +338,13 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: _goal == goal
-                              ? AppColors.primary.withOpacity(0.15)
-                              : Colors.white.withOpacity(0.04),
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : Colors.white.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: _goal == goal
                                 ? AppColors.primary
-                                : Colors.white.withOpacity(0.06),
+                                : Colors.white.withValues(alpha: 0.06),
                           ),
                         ),
                         child: Row(
@@ -396,7 +397,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.notifications_active_rounded, color: AppColors.primary, size: 40),
@@ -501,11 +502,11 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.primary.withOpacity(0.45)
-                      : AppColors.primary.withOpacity(0.1),
+                      ? AppColors.primary.withValues(alpha: 0.45)
+                      : AppColors.primary.withValues(alpha: 0.1),
                 ),
                 color: isSelected
-                    ? AppColors.primary.withOpacity(0.12)
+                    ? AppColors.primary.withValues(alpha: 0.12)
                     : Colors.transparent,
               ),
               child: Text(
@@ -584,7 +585,7 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -611,3 +612,4 @@ class _SetupFlowScreenState extends ConsumerState<SetupFlowScreen> {
     );
   }
 }
+

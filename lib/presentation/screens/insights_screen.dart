@@ -30,7 +30,7 @@ class InsightsScreen extends ConsumerWidget {
               ),
               CircleAvatar(
                 radius: 18,
-                backgroundColor: Colors.white.withOpacity(0.08),
+                backgroundColor: Colors.white.withValues(alpha: 0.08),
                 child: const Icon(Icons.person_outline, color: AppColors.textSecondary, size: 18),
               ),
             ],
@@ -66,7 +66,7 @@ class InsightsScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -163,7 +163,7 @@ class InsightsScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: AppColors.primary, size: 28),
@@ -200,7 +200,7 @@ class SimpleLineChartPainter extends CustomPainter {
 
     // Draw dashed secondary line
     final dashPaint = Paint()
-      ..color = AppColors.textMuted.withOpacity(0.3)
+      ..color = AppColors.textMuted.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -234,4 +234,5 @@ class SimpleLineChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
 

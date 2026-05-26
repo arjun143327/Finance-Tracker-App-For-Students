@@ -21,6 +21,7 @@ class AppColors {
   static const Color warning = Color(0xFFD4A373);
 
   // Glass Colors
-  static Color glassBackground = const Color(0xFFC69C6D).withOpacity(0.1);
-  static Color glassBorder = const Color(0xFFC69C6D).withOpacity(0.2);
+  static const Color glassBackground = Color.fromRGBO(198, 156, 109, 0.10);
+  static const Color glassBorder     = Color.fromRGBO(198, 156, 109, 0.20);
 }
+

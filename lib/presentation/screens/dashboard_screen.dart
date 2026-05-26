@@ -7,6 +7,7 @@ import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../data/providers/insights_provider.dart';
 import '../../data/providers/user_provider.dart';
+import '../../data/providers/currency_budget_provider.dart';
 import 'settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -20,6 +21,7 @@ class DashboardScreen extends ConsumerWidget {
     final profile = profileState.valueOrNull;
     final userName = profile?.name ?? 'User';
     final initialBalance = profile?.balance ?? 0.0;
+    final currency = ref.watch(currencySymbolProvider);
 
     final hour = DateTime.now().hour;
     String greeting = 'Good Evening';
@@ -42,7 +44,7 @@ class DashboardScreen extends ConsumerWidget {
                 },
                 child: CircleAvatar(
                   radius: 20,
-                  backgroundColor: Colors.white.withOpacity(0.08),
+                  backgroundColor: Colors.white.withValues(alpha: 0.08),
                   child: const Icon(Icons.person_outline, color: AppColors.textSecondary),
                 ),
               ),
@@ -78,9 +80,9 @@ class DashboardScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -107,7 +109,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             error: (_, __) => Text(
-              '₹0',
+              '${currency}0',
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
                 fontSize: 44,
                 letterSpacing: -1,
@@ -119,13 +121,13 @@ class DashboardScreen extends ConsumerWidget {
                 tween: Tween(begin: 0, end: total),
                 duration: const Duration(milliseconds: 850),
                 builder: (context, value, _) => Text(
-                  '₹${value.toStringAsFixed(0)}',
+                  '$currency${value.toStringAsFixed(0)}',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     fontSize: 44,
                     letterSpacing: -1,
                     shadows: [
                       Shadow(
-                        color: AppColors.primary.withOpacity(0.25),
+                        color: AppColors.primary.withValues(alpha: 0.25),
                         blurRadius: 22,
                         offset: const Offset(-3, -4),
                       ),
@@ -177,7 +179,7 @@ class DashboardScreen extends ConsumerWidget {
               return Column(
                 children: transactions
                     .take(3)
-                    .map((tx) => _buildRecentTransaction(context, tx))
+                    .map((tx) => _buildRecentTransaction(context, tx, currency))
                     .toList(),
               );
             },
@@ -193,7 +195,7 @@ class DashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             blurRadius: 28,
             spreadRadius: 1,
             offset: const Offset(-6, -8),
@@ -207,7 +209,7 @@ class DashboardScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -238,7 +240,7 @@ class DashboardScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          Icon(Icons.receipt_long_rounded, size: 56, color: AppColors.primary.withOpacity(0.4)),
+          Icon(Icons.receipt_long_rounded, size: 56, color: AppColors.primary.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text(
             'No transactions yet',
@@ -266,24 +268,24 @@ class DashboardScreen extends ConsumerWidget {
     });
   }
 
-  Widget _buildRecentTransaction(BuildContext context, TransactionModel tx) {
+  Widget _buildRecentTransaction(BuildContext context, TransactionModel tx, String currency) {
     final isIncome = tx.type == TransactionType.income;
-    final amountText = '${isIncome ? '+' : '-'}₹${tx.amount.toStringAsFixed(0)}';
+    final amountText = '${isIncome ? '+' : '-'}$currency${tx.amount.toStringAsFixed(0)}';
     final subtitle = '${tx.category} • ${DateFormat('dd MMM, hh:mm a').format(tx.date)}';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -331,3 +333,4 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 }
+

@@ -33,3 +33,4 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfileModel?>> {
     }
   }
 }
+

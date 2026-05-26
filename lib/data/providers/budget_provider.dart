@@ -54,3 +54,4 @@ final currentMonthSpendingProvider = Provider<double>((ref) {
   final transactions = ref.watch(currentMonthTransactionsProvider);
   return transactions.fold(0, (sum, tx) => sum + tx.amount);
 });
+

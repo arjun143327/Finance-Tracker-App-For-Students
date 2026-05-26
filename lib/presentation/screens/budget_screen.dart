@@ -1,39 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_colors.dart';
-
 import '../../data/providers/budget_provider.dart';
+import '../../data/providers/currency_budget_provider.dart';
 import '../widgets/glass_card.dart';
 
 class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
 
-  void _showSetBudgetDialog(BuildContext context, WidgetRef ref, double current) {
-    final controller = TextEditingController(text: current.toStringAsFixed(0));
+  // --- Dialogs ---
+
+  void _showSetCategoryBudgetDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String category,
+    double current,
+    String currency,
+  ) {
+    final controller = TextEditingController(
+      text: current > 0 ? current.toStringAsFixed(0) : '',
+    );
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgGradientStart,
-        title: const Text('Set Monthly Budget', style: TextStyle(color: Colors.white)),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgGradientEnd,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          'Set limit for $category',
+          style: GoogleFonts.cormorantGaramond(
+            color: AppColors.textPrimary,
+            fontSize: 22,
+            fontWeight: FontWeight.w400,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Enter amount',
-            prefixText: '₹ ',
+          style: GoogleFonts.dmSans(color: AppColors.textPrimary, fontSize: 22),
+          decoration: InputDecoration(
+            hintText: '0',
+            prefixText: '$currency ',
+            prefixStyle: GoogleFonts.cormorantGaramond(
+              color: AppColors.primary,
+              fontSize: 22,
+            ),
+            hintStyle: GoogleFonts.dmSans(
+              color: AppColors.textSecondary.withValues(alpha: 0.4),
+            ),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primary, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: AppColors.primaryLight, width: 2),
+            ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.dmSans(color: AppColors.textMuted),
+            ),
+          ),
           TextButton(
             onPressed: () {
-              final amount = double.tryParse(controller.text) ?? 0;
-              ref.read(monthlyBudgetProvider.notifier).setBudget(amount);
-              Navigator.pop(context);
+              final amount = double.tryParse(controller.text.trim()) ?? 0;
+              ref.read(categoryBudgetsProvider.notifier)
+                  .setBudgetForCategory(category, amount);
+              Navigator.pop(ctx);
             },
-            child: const Text('Save'),
+            child: Text(
+              'Save',
+              style: GoogleFonts.dmSans(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -42,119 +88,155 @@ class BudgetScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final totalBudget = ref.watch(monthlyBudgetProvider);
     final totalSpent = ref.watch(currentMonthSpendingProvider);
     final transactions = ref.watch(currentMonthTransactionsProvider);
+    final categoryBudgets = ref.watch(categoryBudgetsProvider);
+    final currency = ref.watch(currencySymbolProvider);
 
     // Group spending by category
-    final categoryMap = <String, double>{};
-    for (var tx in transactions) {
-      categoryMap[tx.category] = (categoryMap[tx.category] ?? 0) + tx.amount;
+    final categorySpending = <String, double>{};
+    for (final tx in transactions) {
+      categorySpending[tx.category] =
+          (categorySpending[tx.category] ?? 0) + tx.amount;
     }
+
+    // Merge: show all categories that have spending OR a budget set
+    final allCategories = {
+      ...categorySpending.keys,
+      ...categoryBudgets.keys,
+    }.toList()
+      ..sort();
+
+    final totalBudgeted = categoryBudgets.values.fold(0.0, (a, b) => a + b);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // --- Header ---
+          Text(
+            'Budget',
+            style: Theme.of(context).textTheme.displayLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Set limits per category and track your spending.',
+            style: GoogleFonts.dmSans(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w300,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // --- Overview Summary Card ---
+          if (totalBudgeted > 0) ...[
+            _BudgetOverviewCard(
+              currency: currency,
+              totalBudgeted: totalBudgeted,
+              totalSpent: totalSpent,
+            ),
+            const SizedBox(height: 32),
+          ],
+
+          // --- Section title ---
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Budget',
-                style: Theme.of(context).textTheme.displayLarge,
+                'Categories',
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
-              IconButton(
-                icon: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
-                onPressed: () => _showSetBudgetDialog(context, ref, totalBudget),
+              Text(
+                'Tap to set limit',
+                style: GoogleFonts.dmSans(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w300,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Track category limits and stay ahead of overspending.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (totalBudget == 0)
-            GlassCard(
-              interactive: false,
-              child: Column(
-                children: [
-                  const Icon(Icons.edit_note_rounded, color: AppColors.primary, size: 36),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No budget set',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap the edit icon above to set your monthly limit.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+          const SizedBox(height: 16),
+
+          // --- Empty state ---
+          if (allCategories.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Icon(Icons.tune_rounded, color: AppColors.primary, size: 36),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No spending yet this month',
+                      style: GoogleFonts.cormorantGaramond(
+                        color: AppColors.textSecondary,
+                        fontSize: 18,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    Text(
+                      'Add expenses to track your categories here.',
+                      style: GoogleFonts.dmSans(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
-          else ...[
-            _BudgetSummaryCard(
-              totalBudget: totalBudget,
-              totalSpent: totalSpent,
-              remaining: (totalBudget - totalSpent).clamp(0.0, double.infinity),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              'Category Spending',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 16),
-            if (categoryMap.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Text(
-                    'No expenses recorded this month.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+          else
+            ...allCategories.map((category) {
+              final spent = categorySpending[category] ?? 0.0;
+              final limit = categoryBudgets[category] ?? 0.0;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _CategoryBudgetTile(
+                  category: category,
+                  spent: spent,
+                  limit: limit,
+                  currency: currency,
+                  onTap: () => _showSetCategoryBudgetDialog(
+                    context,
+                    ref,
+                    category,
+                    limit,
+                    currency,
                   ),
                 ),
-              )
-            else
-              ...categoryMap.entries.map((entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: _BudgetCategoryTile(
-                  category: entry.key,
-                  spent: entry.value,
-                  limit: totalBudget / categoryMap.length,
-                  accent: AppColors.primary,
-                ),
-              )),
-          ],
+              );
+            }),
         ],
       ),
     );
   }
 }
 
-class _BudgetSummaryCard extends StatelessWidget {
-  final double totalBudget;
-  final double totalSpent;
-  final double remaining;
+// --- Overview Summary Card ---
 
-  const _BudgetSummaryCard({
-    required this.totalBudget,
+class _BudgetOverviewCard extends StatelessWidget {
+  final String currency;
+  final double totalBudgeted;
+  final double totalSpent;
+
+  const _BudgetOverviewCard({
+    required this.currency,
+    required this.totalBudgeted,
     required this.totalSpent,
-    required this.remaining,
   });
 
   @override
   Widget build(BuildContext context) {
-    final usage = (totalSpent / totalBudget).clamp(0.0, 1.0);
-    final isNearLimit = usage >= 0.85 && usage < 1.0;
-    final isOverLimit = totalSpent >= totalBudget;
+    final usage = totalBudgeted > 0
+        ? (totalSpent / totalBudgeted).clamp(0.0, 1.0)
+        : 0.0;
+    final isOverLimit = totalSpent > totalBudgeted;
+    final isNearLimit = usage >= 0.85 && !isOverLimit;
 
     Color statusColor = AppColors.primary;
     if (isNearLimit) statusColor = AppColors.warning;
@@ -165,16 +247,15 @@ class _BudgetSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.12),
+            color: statusColor.withValues(alpha: 0.12),
             blurRadius: 26,
-            spreadRadius: 1,
-            offset: const Offset(-5, -7),
+            offset: const Offset(-4, -6),
           ),
         ],
       ),
       child: GlassCard(
         interactive: false,
-        borderColor: isOverLimit ? AppColors.expense.withOpacity(0.3) : null,
+        borderColor: isOverLimit ? AppColors.expense.withValues(alpha: 0.3) : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -186,17 +267,20 @@ class _BudgetSummaryCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 if (isOverLimit)
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24)
+                  const Icon(Icons.warning_amber_rounded,
+                      color: AppColors.expense, size: 22)
                 else if (isNearLimit)
-                  const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 24),
+                  const Icon(Icons.info_outline_rounded,
+                      color: AppColors.warning, size: 22),
               ],
             ),
             const SizedBox(height: 14),
             Text(
-              '₹${totalSpent.toStringAsFixed(0)} / ₹${totalBudget.toStringAsFixed(0)} used',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              '$currency${totalSpent.toStringAsFixed(0)} / $currency${totalBudgeted.toStringAsFixed(0)} used',
+              style: GoogleFonts.dmSans(
                 color: isOverLimit ? AppColors.expense : AppColors.textPrimary,
-                fontWeight: isOverLimit ? FontWeight.bold : FontWeight.normal,
+                fontSize: 15,
+                fontWeight: isOverLimit ? FontWeight.w600 : FontWeight.w300,
               ),
             ),
             const SizedBox(height: 12),
@@ -205,15 +289,19 @@ class _BudgetSummaryCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: usage,
                 minHeight: 10,
-                backgroundColor: Colors.white.withOpacity(0.08),
+                backgroundColor: Colors.white.withValues(alpha: 0.08),
                 valueColor: AlwaysStoppedAnimation<Color>(statusColor),
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              isOverLimit ? 'Budget exceeded by ₹${(totalSpent - totalBudget).toStringAsFixed(0)}' : 'Remaining: ₹${remaining.toStringAsFixed(0)}',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              isOverLimit
+                  ? 'Over budget by $currency${(totalSpent - totalBudgeted).toStringAsFixed(0)}'
+                  : 'Remaining: $currency${(totalBudgeted - totalSpent).clamp(0, double.infinity).toStringAsFixed(0)}',
+              style: GoogleFonts.dmSans(
                 color: isOverLimit ? AppColors.expense : AppColors.primaryLight,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -223,79 +311,109 @@ class _BudgetSummaryCard extends StatelessWidget {
   }
 }
 
-class _BudgetCategoryTile extends StatelessWidget {
+// --- Per-Category Tile ---
+
+class _CategoryBudgetTile extends StatelessWidget {
   final String category;
   final double spent;
   final double limit;
-  final Color accent;
+  final String currency;
+  final VoidCallback onTap;
 
-  const _BudgetCategoryTile({
+  const _CategoryBudgetTile({
     required this.category,
     required this.spent,
     required this.limit,
-    required this.accent,
+    required this.currency,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final ratio = (spent / limit).clamp(0.0, 1.3);
-    final isNearLimit = ratio >= 0.85 && ratio <= 1.0;
-    final isOverLimit = ratio > 1.0;
+    final hasLimit = limit > 0;
+    final ratio = hasLimit ? (spent / limit).clamp(0.0, 1.3) : 0.0;
+    final isNearLimit = hasLimit && ratio >= 0.85 && ratio <= 1.0;
+    final isOverLimit = hasLimit && ratio > 1.0;
 
-    String status = 'On track';
-    Color statusColor = AppColors.income;
-
+    String statusLabel = hasLimit ? 'On track' : 'No limit set';
+    Color statusColor = hasLimit ? AppColors.income : AppColors.textMuted;
     if (isNearLimit) {
-      status = 'Near limit';
+      statusLabel = 'Near limit';
       statusColor = AppColors.warning;
     }
     if (isOverLimit) {
-      status = 'Limit exceeded';
+      statusLabel = 'Exceeded';
       statusColor = AppColors.expense;
     }
 
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  category,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 22,
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    category,
+                    style: GoogleFonts.cormorantGaramond(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      statusLabel,
+                      style: GoogleFonts.dmSans(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.textMuted,
+                      size: 14,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hasLimit
+                  ? '$currency${spent.toStringAsFixed(0)} of $currency${limit.toStringAsFixed(0)}'
+                  : '$currency${spent.toStringAsFixed(0)} spent — tap to set a limit',
+              style: GoogleFonts.dmSans(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            if (hasLimit) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: LinearProgressIndicator(
+                  value: ratio > 1 ? 1.0 : ratio,
+                  minHeight: 6,
+                  backgroundColor: Colors.white.withValues(alpha: 0.07),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isOverLimit ? AppColors.expense : AppColors.primary,
                   ),
                 ),
               ),
-              Text(
-                status,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: statusColor,
-                ),
-              ),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '₹${spent.toStringAsFixed(0)} of ₹${limit.toStringAsFixed(0)}',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: LinearProgressIndicator(
-              value: ratio > 1 ? 1 : ratio,
-              minHeight: 8,
-              backgroundColor: Colors.white.withOpacity(0.08),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                isOverLimit ? AppColors.expense : accent,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+

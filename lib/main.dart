@@ -25,3 +25,4 @@ class BudgetrixApp extends StatelessWidget {
     );
   }
 }
+

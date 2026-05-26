@@ -67,9 +67,9 @@ class _AppShellState extends State<AppShell> {
           margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.22),
+            color: Colors.black.withValues(alpha: 0.22),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -88,7 +88,7 @@ class _AppShellState extends State<AppShell> {
 
   Widget _navItem({required IconData icon, required String label, required int index}) {
     final selected = _selectedIndex == index;
-    final color = selected ? AppColors.primary : Colors.white.withOpacity(0.65);
+    final color = selected ? AppColors.primary : Colors.white.withValues(alpha: 0.65);
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => setState(() => _selectedIndex = index),
@@ -97,10 +97,10 @@ class _AppShellState extends State<AppShell> {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withOpacity(0.14) : Colors.transparent,
+          color: selected ? AppColors.primary.withValues(alpha: 0.14) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? AppColors.primary.withOpacity(0.4) : Colors.transparent,
+            color: selected ? AppColors.primary.withValues(alpha: 0.4) : Colors.transparent,
           ),
         ),
         child: Column(
@@ -122,3 +122,4 @@ class _AppShellState extends State<AppShell> {
     );
   }
 }
+
