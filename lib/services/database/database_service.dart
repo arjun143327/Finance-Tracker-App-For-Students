@@ -30,7 +30,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'budgetrix.db');
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -94,6 +94,7 @@ class DatabaseService {
       CategoryModel(name: 'Bills', icon: Icons.receipt_long_rounded, color: Colors.red),
       CategoryModel(name: 'Health', icon: Icons.medical_services_rounded, color: Colors.green),
       CategoryModel(name: 'Education', icon: Icons.school_rounded, color: Colors.indigo),
+      CategoryModel(name: 'Entertainment', icon: Icons.movie_rounded, color: Colors.pink),
       CategoryModel(name: 'Other', icon: Icons.category_rounded, color: Colors.grey),
     ];
 
@@ -116,6 +117,17 @@ class DatabaseService {
     }
     if (oldVersion < 3) {
       await db.execute("ALTER TABLE transactions ADD COLUMN isRecurring INTEGER DEFAULT 0");
+    }
+    if (oldVersion < 4) {
+      // Add Entertainment category for users upgrading from earlier versions
+      final existing = await db.query('categories', where: "name = 'Entertainment'");
+      if (existing.isEmpty) {
+        await db.insert('categories', CategoryModel(
+          name: 'Entertainment',
+          icon: Icons.movie_rounded,
+          color: Colors.pink,
+        ).toMap());
+      }
     }
   }
 

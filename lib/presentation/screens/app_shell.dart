@@ -6,6 +6,7 @@ import 'ledger_screen.dart';
 import 'insights_screen.dart';
 import 'budget_screen.dart';
 import 'add_expense_screen.dart';
+import 'voice_fill_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -14,8 +15,10 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
+  late AnimationController _micPulseController;
+  late Animation<double> _micGlowAnim;
 
   final List<Widget> _screens = const [
     DashboardScreen(),
@@ -24,6 +27,24 @@ class _AppShellState extends State<AppShell> {
     BudgetScreen(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _micPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _micGlowAnim = Tween<double>(begin: 0.25, end: 0.55).animate(
+      CurvedAnimation(parent: _micPulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _micPulseController.dispose();
+    super.dispose();
+  }
+
   Future<void> _openAddExpense() async {
     await Navigator.of(context).push(
       PageRouteBuilder(
@@ -31,6 +52,18 @@ class _AppShellState extends State<AppShell> {
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
           child: const AddExpenseScreen(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openVoiceFill() async {
+    await Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 280),
+        pageBuilder: (_, animation, __) => FadeTransition(
+          opacity: animation,
+          child: const VoiceFillScreen(),
         ),
       ),
     );
@@ -77,6 +110,8 @@ class _AppShellState extends State<AppShell> {
               _navItem(icon: Icons.dashboard_outlined, label: 'HOME', index: 0),
               _navItem(icon: Icons.list_alt_rounded, label: 'TRANSACTIONS', index: 1),
               const SizedBox(width: 42),
+              // Mic voice-fill button (left of center)
+              _micButton(),
               _navItem(icon: Icons.insights_rounded, label: 'INSIGHTS', index: 2),
               _navItem(icon: Icons.pie_chart_outline_rounded, label: 'BUDGET', index: 3),
             ],
@@ -114,6 +149,53 @@ class _AppShellState extends State<AppShell> {
                 fontSize: 10,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _micButton() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: _openVoiceFill,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: _micGlowAnim,
+              builder: (_, child) => Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: _micGlowAnim.value),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+              child: const Icon(
+                Icons.mic_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'VOICE',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary.withValues(alpha: 0.9),
               ),
             ),
           ],

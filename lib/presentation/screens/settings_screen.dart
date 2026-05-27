@@ -5,7 +5,6 @@ import '../../core/app_theme.dart';
 import '../../data/providers/notifications_provider.dart';
 import '../widgets/glass_card.dart';
 import 'about_screen.dart';
-import 'category_management_screen.dart';
 import 'edit_profile_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -36,18 +35,7 @@ class SettingsScreen extends ConsumerWidget {
                 );
               },
             ),
-            const SizedBox(height: 16),
-            _buildSettingTile(
-              context,
-              icon: Icons.category_rounded,
-              title: 'Manage Categories',
-              subtitle: 'Add or remove expense categories',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CategoryManagementScreen()),
-                );
-              },
-            ),
+
             const SizedBox(height: 16),
             _buildSettingTile(
               context,
