@@ -94,7 +94,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     );
 
     final notifier = ref.read(transactionsListProvider.notifier);
-    if (widget.initialTransaction == null) {
+    if (widget.initialTransaction?.id == null) {
       await notifier.addTransaction(model);
     } else {
       await notifier.updateTransaction(model);

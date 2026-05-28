@@ -81,11 +81,10 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
           });
         }
       },
-      listenFor: const Duration(seconds: 10),
-      pauseFor: const Duration(seconds: 2),
-      localeId: 'en_IN',
+      listenFor: const Duration(seconds: 12),
+      pauseFor: const Duration(seconds: 3),
       listenOptions: SpeechListenOptions(
-        cancelOnError: true,
+        cancelOnError: false,
         partialResults: true,
       ),
     );
