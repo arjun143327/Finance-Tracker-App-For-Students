@@ -22,3 +22,17 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+subprojects {
+    pluginManager.withPlugin("com.android.library") {
+        val androidExtension = extensions.findByName("android")
+        if (androidExtension != null) {
+            val getNamespace = androidExtension::class.java.methods.find { it.name == "getNamespace" }
+            val currentNamespace = getNamespace?.invoke(androidExtension) as? String
+            if (currentNamespace == null) {
+                val setNamespace = androidExtension::class.java.methods.find { it.name == "setNamespace" }
+                setNamespace?.invoke(androidExtension, project.group.toString())
+            }
+        }
+    }
+}
