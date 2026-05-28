@@ -10,6 +10,7 @@ import 'voice_fill_screen.dart';
 import '../../services/notification_service.dart';
 import '../../services/sms_parser_service.dart';
 import '../../data/models/transaction_model.dart';
+import '../../core/app_constants.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -29,11 +30,17 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   late AnimationController _micPulseController;
   late Animation<double> _micGlowAnim;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    LedgerScreen(),
-    InsightsScreen(),
-    BudgetScreen(),
+  List<Widget> get _screens => [
+    DashboardScreen(
+      onViewAll: () {
+        setState(() {
+          _selectedIndex = 1;
+        });
+      },
+    ),
+    const LedgerScreen(),
+    const InsightsScreen(),
+    const BudgetScreen(),
   ];
 
   @override
@@ -41,7 +48,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     super.initState();
     _micPulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: AppDurations.breathing,
     )..repeat(reverse: true);
     _micGlowAnim = Tween<double>(begin: 0.22, end: 0.55).animate(
       CurvedAnimation(parent: _micPulseController, curve: Curves.easeInOut),
@@ -66,7 +73,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
 
     Navigator.of(context).push(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 280),
+        transitionDuration: AppDurations.fast,
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
           child: AddExpenseScreen(initialTransaction: prefilled),
@@ -95,7 +102,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   Future<void> _openAddExpense() async {
     await Navigator.of(context).push(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 280),
+        transitionDuration: AppDurations.fast,
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
           child: const AddExpenseScreen(),
@@ -107,7 +114,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   Future<void> _openVoiceFill() async {
     await Navigator.of(context).push(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 280),
+        transitionDuration: AppDurations.fast,
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
           child: const VoiceFillScreen(),
@@ -129,7 +136,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
           children: [
             // ── Main content ──────────────────────────────────────────────
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 280),
+              duration: AppDurations.fast,
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
               child: KeyedSubtree(

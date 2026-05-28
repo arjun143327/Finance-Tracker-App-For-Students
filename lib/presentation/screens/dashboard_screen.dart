@@ -10,10 +10,13 @@ import '../../data/providers/transaction_provider.dart';
 import '../../data/providers/insights_provider.dart';
 import '../../data/providers/user_provider.dart';
 import '../../data/providers/currency_budget_provider.dart';
+import '../../core/app_constants.dart';
 import 'settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback onViewAll;
+
+  const DashboardScreen({super.key, required this.onViewAll});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+      padding: AppSizes.pagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -86,7 +89,7 @@ class DashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: AppSizes.radiusLarge,
               border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
@@ -130,7 +133,7 @@ class DashboardScreen extends ConsumerWidget {
               final total = _calculateBalance(transactions, initialBalance);
               return TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: total),
-                duration: const Duration(milliseconds: 850),
+                duration: AppDurations.slow,
                 builder: (context, value, _) => Text(
                   '$currency${value.toStringAsFixed(0)}',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
@@ -191,11 +194,7 @@ class DashboardScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               TextButton(
-                onPressed: () {
-                  // Navigate to the Ledger tab (index 1) via the AppShell
-                  // Using a simple callback via DefaultTabController is not needed here
-                  // since the user can tap the nav bar — this is acceptable UX
-                },
+                onPressed: onViewAll,
                 child: Row(
                   children: [
                     Text(
@@ -232,7 +231,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildInsightCard(BuildContext context, InsightMessage insight) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppSizes.radiusMedium,
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.12),
@@ -247,7 +246,7 @@ class DashboardScreen extends ConsumerWidget {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: AppSizes.contentPaddingAll,
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -314,19 +313,19 @@ class DashboardScreen extends ConsumerWidget {
     final subtitle = '${tx.category} • ${DateFormat('dd MMM, hh:mm a').format(tx.date)}';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: AppSizes.cardPaddingSmall,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppSizes.radiusMedium,
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: AppSizes.contentPaddingAll,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppSizes.radiusSmall,
             ),
             child: Icon(
               isIncome ? Icons.south_west_rounded : Icons.north_east_rounded,

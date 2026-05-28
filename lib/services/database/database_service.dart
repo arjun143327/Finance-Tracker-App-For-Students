@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/models/category_model.dart';
 import '../../data/models/user_profile_model.dart';
@@ -23,6 +25,35 @@ class DatabaseService {
     return _database!;
   }
 
+  Future<void> initWeb() async {
+    if (!kIsWeb) return;
+    final prefs = await SharedPreferences.getInstance();
+    
+    final txString = prefs.getString('web_transactions');
+    if (txString != null) {
+      final List<dynamic> jsonList = jsonDecode(txString);
+      _webTransactionsStore.clear();
+      _webTransactionsStore.addAll(jsonList.cast<Map<String, dynamic>>());
+      if (_webTransactionsStore.isNotEmpty) {
+        _webIdCounter = _webTransactionsStore.map((e) => e['id'] as int).reduce((a, b) => a > b ? a : b);
+      }
+    }
+    
+    final upString = prefs.getString('web_user_profile');
+    if (upString != null) {
+      _webUserProfileStore = jsonDecode(upString);
+    }
+  }
+
+  Future<void> _saveWebStore() async {
+    if (!kIsWeb) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('web_transactions', jsonEncode(_webTransactionsStore));
+    if (_webUserProfileStore != null) {
+      await prefs.setString('web_user_profile', jsonEncode(_webUserProfileStore));
+    }
+  }
+
   Future<Database> _initDatabase() async {
     if (kIsWeb) {
       throw UnsupportedError('Web uses in-memory fallback store.');
@@ -30,7 +61,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'budgetrix.db');
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -49,6 +80,8 @@ class DatabaseService {
         isRecurring INTEGER DEFAULT 0
       )
     ''');
+
+    await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
 
     await db.execute('''
       CREATE TABLE categories(
@@ -128,6 +161,10 @@ class DatabaseService {
           color: Colors.pink,
         ).toMap());
       }
+    }
+    if (oldVersion < 5) {
+      // Add index to transactions.date to improve sorting performance
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)');
     }
   }
 
@@ -211,6 +248,7 @@ class DatabaseService {
       _webIdCounter += 1;
       map['id'] = _webIdCounter;
       _webTransactionsStore.add(map);
+      await _saveWebStore();
       return _webIdCounter;
     }
     Database db = await database;
@@ -233,6 +271,7 @@ class DatabaseService {
   Future<int> deleteTransaction(int id) async {
     if (kIsWeb) {
       _webTransactionsStore.removeWhere((item) => item['id'] == id);
+      await _saveWebStore();
       return 1;
     }
     Database db = await database;
@@ -244,6 +283,7 @@ class DatabaseService {
       final index = _webTransactionsStore.indexWhere((item) => item['id'] == transaction.id);
       if (index == -1) return 0;
       _webTransactionsStore[index] = transaction.toMap();
+      await _saveWebStore();
       return 1;
     }
     Database db = await database;
@@ -273,6 +313,7 @@ class DatabaseService {
   Future<void> saveUserProfile(UserProfileModel profile) async {
     if (kIsWeb) {
       _webUserProfileStore = profile.toMap();
+      await _saveWebStore();
       return;
     }
     Database db = await database;
