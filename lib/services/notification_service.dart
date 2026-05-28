@@ -80,23 +80,24 @@ class NotificationService {
 
   // ── Post a transaction alert ──────────────────────────────────────────
   Future<void> showTransactionAlert(SmsParsedTransaction tx) async {
-    // Only post for debit (expense) transactions
-    if (!tx.isDebit) return;
-
     final amountStr =
         '₹${tx.amount % 1 == 0 ? tx.amount.toInt() : tx.amount.toStringAsFixed(2)}';
-    final merchantPart =
-        tx.merchant != null ? ' at ${tx.merchant}' : '';
+    
+    final merchantPart = tx.merchant != null 
+        ? (tx.isDebit ? ' at ${tx.merchant}' : ' from ${tx.merchant}') 
+        : '';
 
-    const String title = '💸 Log your expense!';
-    final body =
-        'You spent $amountStr$merchantPart. Tap to add it to Budgetrix.';
+    final String title = tx.isDebit ? '💸 Log your expense!' : '💰 Log your income!';
+    final body = tx.isDebit
+        ? 'You spent $amountStr$merchantPart. Tap to add it to Budgetrix.'
+        : 'You received $amountStr$merchantPart. Tap to add it to Budgetrix.';
 
     // Encode the parsed transaction as JSON payload for deep-linking
     final payload = jsonEncode({
       'amount': tx.amount,
       'merchant': tx.merchant,
       'paymentMethod': tx.paymentMethod,
+      'isDebit': tx.isDebit,
     });
 
     await _plugin.show(
@@ -119,7 +120,7 @@ class NotificationService {
         amount: (map['amount'] as num).toDouble(),
         merchant: map['merchant'] as String?,
         paymentMethod: map['paymentMethod'] as String?,
-        isDebit: true,
+        isDebit: map['isDebit'] as bool? ?? true,
         rawSms: '',
       );
       onNotificationTapped?.call(tx);

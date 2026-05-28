@@ -68,7 +68,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       amount: tx.amount,
       date: DateTime.now(),
       method: tx.paymentMethod ?? 'Cash',
-      type: TransactionType.expense,
+      type: tx.isDebit ? TransactionType.expense : TransactionType.income,
     );
 
     Navigator.of(context).push(
