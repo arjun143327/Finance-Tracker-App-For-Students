@@ -274,11 +274,13 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       onDismissed: (direction) {
         if (direction == DismissDirection.endToStart && transaction.id != null) {
           ref.read(transactionsListProvider.notifier).deleteTransaction(transaction.id!);
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('"${transaction.title}" deleted'),
               backgroundColor: AppColors.bgGradientEnd,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
               action: SnackBarAction(
                 label: 'Undo',
                 textColor: AppColors.primary,

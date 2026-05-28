@@ -47,7 +47,7 @@ class SmsParserService {
   // Matches: Rs. 1,200  /  INR 450  /  ₹450.50  /  Rs1200
   // Group 1 captures the numeric amount.
   static final _amountRegex = RegExp(
-    r'(?:rs\.?\s*|inr\s*|₹\s*)(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)',
+    r'(?:rs\.?\s*|inr\s*|₹\s*)(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)',
     caseSensitive: false,
   );
 
