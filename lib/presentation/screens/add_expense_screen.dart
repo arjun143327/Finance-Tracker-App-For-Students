@@ -6,6 +6,7 @@ import '../../core/app_theme.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../data/providers/category_provider.dart';
+import '../../data/providers/budget_provider.dart';
 import '../../data/providers/currency_budget_provider.dart';
 import '../widgets/glass_card.dart';
 
@@ -111,6 +112,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final isEdit         = widget.initialTransaction != null;
     final categoriesState = ref.watch(categoryListProvider);
     final currency       = ref.watch(currencySymbolProvider);
+    final transactions   = ref.watch(currentMonthTransactionsProvider);
+    final categoryBudgets = ref.watch(categoryBudgetsProvider);
+
+    // Calculate current spent for the selected category
+    final spent = transactions
+        .where((tx) => tx.type == TransactionType.expense && tx.category == _category)
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+    
+    final limit = categoryBudgets[_category] ?? 0.0;
 
     return Container(
       decoration: AppTheme.backgroundGradient,
@@ -352,6 +362,44 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
+
+                // ── Real-Time Budget Warning Sentinel ───────────────────────
+                if (_type == TransactionType.expense && limit > 0)
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _amountController,
+                    builder: (context, value, _) {
+                      final amount = double.tryParse(value.text) ?? 0.0;
+                      // Don't double count if we are editing the existing transaction
+                      final oldAmount = widget.initialTransaction?.amount ?? 0.0;
+                      final currentSpent = spent - oldAmount;
+                      
+                      if ((currentSpent + amount) > limit) {
+                        final excess = (currentSpent + amount) - limit;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'This entry will exceed your $_category limit by $currency${excess.toStringAsFixed(0)}.',
+                                  style: GoogleFonts.lato(color: Colors.orange, fontWeight: FontWeight.w600, fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
 
                 // ── Save button ────────────────────────────────────────────
                 _SaveButton(

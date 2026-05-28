@@ -24,6 +24,7 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
   bool _isListening = false;
   bool _speechAvailable = false;
   String _transcript = '';
+  double _soundLevel = 0.0;
   VoiceParsedResult? _parsed;
 
   // Pulse animation for the mic orb
@@ -80,6 +81,9 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
             }
           });
         }
+      },
+      onSoundLevelChange: (level) {
+        if (mounted) setState(() => _soundLevel = level);
       },
       listenFor: const Duration(seconds: 12),
       pauseFor: const Duration(seconds: 3),
@@ -164,9 +168,30 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
 
   // ── Listening View ──────────────────────────────────────────────────────
   Widget _buildListeningView() {
+    // Calculate dynamic wave scale from pulse anim + sound level
+    // Sound level is typically 0 to 100
+    final waveScale = _isListening 
+        ? (_pulseAnim.value + (_soundLevel / 50).clamp(0.0, 1.5)) 
+        : 1.0;
+
     return Column(
       children: [
         const Spacer(),
+        // Live transcript bubble (Conversational Feedback)
+        if (_transcript.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              '"$_transcript"',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                    color: AppColors.primaryLight,
+                    fontStyle: FontStyle.italic,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 48),
+        ],
         // Animated mic orb
         GestureDetector(
           onTap: _isListening ? _stopListening : _startListening,
@@ -205,7 +230,7 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
                   // Outer glow ring 1
                   if (_isListening)
                     Transform.scale(
-                      scale: _pulseAnim.value * 1.4,
+                      scale: waveScale * 1.3,
                       child: Container(
                         width: 110,
                         height: 110,
@@ -218,7 +243,7 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
                   // Outer glow ring 2
                   if (_isListening)
                     Transform.scale(
-                      scale: _pulseAnim.value * 1.2,
+                      scale: waveScale * 1.1,
                       child: Container(
                         width: 110,
                         height: 110,
@@ -258,24 +283,6 @@ class _VoiceFillScreenState extends ConsumerState<VoiceFillScreen>
                 ?.copyWith(color: AppColors.textSecondary),
           ),
         ),
-        // Live transcript bubble
-        if (_transcript.isNotEmpty) ...[
-          const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: GlassCard(
-              interactive: false,
-              child: Text(
-                '"$_transcript"',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.primaryLight,
-                      fontStyle: FontStyle.italic,
-                    ),
-              ),
-            ),
-          ),
-        ],
         const Spacer(),
         Padding(
           padding: const EdgeInsets.all(24),

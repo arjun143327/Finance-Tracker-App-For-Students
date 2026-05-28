@@ -21,6 +21,28 @@ class TransactionModel {
     this.isRecurring = false,
   });
 
+  TransactionModel copyWith({
+    int? id,
+    String? title,
+    String? category,
+    double? amount,
+    DateTime? date,
+    String? method,
+    TransactionType? type,
+    bool? isRecurring,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      method: method ?? this.method,
+      type: type ?? this.type,
+      isRecurring: isRecurring ?? this.isRecurring,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

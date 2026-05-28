@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
+import 'package:fl_chart/fl_chart.dart';
 import '../../core/app_colors.dart';
 import '../widgets/glass_card.dart';
 import '../../data/providers/insights_provider.dart';
@@ -20,27 +21,19 @@ class InsightsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── Header ───────────────────────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Icon(Icons.menu_rounded, color: AppColors.textSecondary),
-              Text(
-                'Insights',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.primary,
-                ),
-              ),
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.white.withValues(alpha: 0.08),
-                child: const Icon(Icons.person_outline,
-                    color: AppColors.textSecondary, size: 18),
-              ),
-            ],
+          Text(
+            'Insights',
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 48),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 8),
+          Text(
+            'Discover trends and patterns in your spending.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+          ),
+          const SizedBox(height: 24),
 
           // ─── Dynamic Spending Chart ────────────────────────────────
           _SpendingChartCard(dailyData: dailyData, currency: currency),
@@ -276,8 +269,68 @@ class _SpendingChartCard extends StatelessWidget {
             SizedBox(
               height: 140,
               width: double.infinity,
-              child: CustomPaint(
-                painter: DailySpendingChartPainter(data: dailyData),
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      strokeWidth: 0.8,
+                    ),
+                  ),
+                  titlesData: const FlTitlesData(show: false), // Using our own day labels below
+                  borderData: FlBorderData(show: false),
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                      tooltipBgColor: AppColors.bgGradientStart.withValues(alpha: 0.85),
+                      tooltipRoundedRadius: 12,
+                      tooltipBorder: const BorderSide(color: AppColors.primary, width: 1.5),
+                      tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          final d = dailyData[spot.spotIndex];
+                          final dateText = d.isToday ? 'Today' : 'Day ${d.day}';
+                          return LineTooltipItem(
+                            '$dateText\n',
+                            const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w400),
+                            children: [
+                              TextSpan(
+                                text: '$currency${spot.y.toStringAsFixed(0)}',
+                                style: const TextStyle(color: AppColors.primaryLight, fontWeight: FontWeight.w700, fontSize: 15),
+                              ),
+                            ],
+                          );
+                        }).toList();
+                      },
+                    ),
+                    handleBuiltInTouches: true,
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: dailyData.asMap().entries.map((e) {
+                        return FlSpot(e.key.toDouble(), e.value.amount);
+                      }).toList(),
+                      isCurved: true,
+                      curveSmoothness: 0.35,
+                      color: AppColors.primary,
+                      barWidth: 2.4,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false), // Hide dots by default, shown on touch
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.28),
+                            AppColors.primary.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 

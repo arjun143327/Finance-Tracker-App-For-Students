@@ -231,8 +231,18 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
 
     return Dismissible(
       key: Key(transaction.id?.toString() ?? transaction.date.toIso8601String()),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.horizontal,
       background: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(left: 20),
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Icon(Icons.repeat_rounded, color: AppColors.primaryLight),
+      ),
+      secondaryBackground: Container(
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.only(right: 20),
         alignment: Alignment.centerRight,
@@ -242,8 +252,27 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
         ),
         child: const Icon(Icons.delete_outline_rounded, color: AppColors.expense),
       ),
-      onDismissed: (_) {
-        if (transaction.id != null) {
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          // Toggle recurring
+          final updated = transaction.copyWith(isRecurring: !transaction.isRecurring);
+          await ref.read(transactionsListProvider.notifier).updateTransaction(updated);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(updated.isRecurring ? 'Marked as recurring' : 'Removed recurring status'),
+                backgroundColor: AppColors.bgGradientEnd,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          return false; // Don't dismiss the tile
+        }
+        return true; // Allow dismiss for delete
+      },
+      onDismissed: (direction) {
+        if (direction == DismissDirection.endToStart && transaction.id != null) {
           ref.read(transactionsListProvider.notifier).deleteTransaction(transaction.id!);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
