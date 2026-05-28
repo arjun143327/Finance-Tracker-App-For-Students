@@ -7,6 +7,9 @@ import 'insights_screen.dart';
 import 'budget_screen.dart';
 import 'add_expense_screen.dart';
 import 'voice_fill_screen.dart';
+import '../../services/notification_service.dart';
+import '../../services/sms_parser_service.dart';
+import '../../data/models/transaction_model.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -43,10 +46,38 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     _micGlowAnim = Tween<double>(begin: 0.22, end: 0.55).animate(
       CurvedAnimation(parent: _micPulseController, curve: Curves.easeInOut),
     );
+
+    // Setup deep-link listener for SMS notifications
+    NotificationService.instance.onNotificationTapped = _onSmsNotificationTapped;
+  }
+
+  void _onSmsNotificationTapped(SmsParsedTransaction tx) {
+    if (!mounted) return;
+    
+    // Convert parsed SMS into a TransactionModel
+    final prefilled = TransactionModel(
+      title: tx.merchant ?? '',
+      category: 'Other', // Auto-categorization could be expanded here
+      amount: tx.amount,
+      date: DateTime.now(),
+      method: tx.paymentMethod ?? 'Cash',
+      type: TransactionType.expense,
+    );
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 280),
+        pageBuilder: (_, animation, __) => FadeTransition(
+          opacity: animation,
+          child: AddExpenseScreen(initialTransaction: prefilled),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    NotificationService.instance.onNotificationTapped = null;
     _micPulseController.dispose();
     super.dispose();
   }
